@@ -54,7 +54,7 @@ class Range(RangeBase, metaclass=RangeMeta):
         return self.start, self.end
 
     def __lt__(self, other):
-        """Ranges are ordered by their least element first.  If other is not a range, return True
+        """Ranges are ordered by their least element first.  If other is not a range, then return True
         if other is greater than all elements in this range.
         """
         if isinstance(other, Range):
@@ -63,7 +63,6 @@ class Range(RangeBase, metaclass=RangeMeta):
         return self.end < other or not self.end_inc and self.end == other and not self.end is INF
 
     def __gt__(self, other):
-
         if isinstance(other, Range):
             return other < self
 
@@ -82,6 +81,7 @@ class Range(RangeBase, metaclass=RangeMeta):
                 or self.end == value and self.end_inc
 
     def __bool__(self):
+        """Shortcut for non-emptyness."""
         return True
 
     @ensure_order
@@ -176,4 +176,5 @@ class Range(RangeBase, metaclass=RangeMeta):
     def __repr__(self):
         return f'{"(["[self.start_inc]}{self.start}, {self.end}{")]"[self.end_inc]}'
 
-BIG_RANGE = Range()
+
+BIG_RANGE = Range()  # the (-inf, inf) range -- it's big!
