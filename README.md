@@ -22,3 +22,34 @@ Given a key, the dict is searched quickly with the bisect module, so it's a reas
 
 We've intentionally left out a lot of Error Catching to make the code easier to grok.  Onus is on the user to not
 break things.
+
+
+How about a reasonable use-case for continous ranges?  Say Bob and Sue have a busy schedule with meetings throughout
+the day and they'd like to know when and if they could find time for each other:
+
+```py
+In [1]: from real_ranges import *
+   ...: from datetime import time
+   ...:
+   ...: bob_meeting_times = RangeSet(Range[time(8, 30): time(9)],
+   ...:                              Range[time(11): time(12)],
+   ...:                              Range[time(14): time(16)])
+   ...:
+   ...: sue_meeting_times = RangeSet(Range[time(8, 30): time(9, 30)],
+   ...:                              Range[time(10): time(10, 30)],
+   ...:                              Range[time(11): time(14, 30)])
+   ...:
+   ...: work_day = Range[time(8): time(17)]
+   ...:
+   ...: bob_free_time = bob_meeting_times ^ work_day
+   ...: sue_free_time = sue_meeting_times ^ work_day
+   ...:
+   ...: print(bob_free_time, sue_free_time, sep='\n')
+   ...:
+   ...: bob_free_time & sue_free_time
+{[08:00:00, 08:30:00), [09:00:00, 11:00:00), [12:00:00, 14:00:00), [16:00:00, 17:00:00)}
+{[08:00:00, 08:30:00), [09:30:00, 10:00:00), [10:30:00, 11:00:00), [14:30:00, 17:00:00)}
+Out[1]: {[08:00:00, 08:30:00), [09:30:00, 10:00:00), [16:00:00, 17:00:00)}
+```
+
+And there you go!  We know exactly which times Bob and Sue could meet!
