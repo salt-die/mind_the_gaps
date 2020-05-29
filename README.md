@@ -53,3 +53,33 @@ Out[1]: {[08:00:00, 08:30:00), [09:30:00, 10:00:00), [16:00:00, 17:00:00)}
 ```
 
 And there you go!  We know exactly which times Bob and Sue could meet!
+
+
+Here's a simple example of a continous-range dict in action:
+
+```py
+In [1]: from real_ranges import *
+
+In [2]: Grades = RangeDict({Range('[90, 100]'): 'A',
+   ...:                     Range[80: 90]: 'B',
+   ...:                     Range[70: 80]: 'C',
+   ...:                     Range[60: 70]: 'D',
+   ...:                     Range[0: 60]: 'F'})
+   ...: Grades[90]
+Out[2]: 'A'
+
+In [3]: Grades[85]
+Out[3]: 'B'
+
+In [4]: Grades[56]
+Out[4]: 'F'
+```
+
+Or a piecewise dispatch-dict:
+```py
+In [7]: f = Piecewise({Range[:4]: lambda x: 2 * x,
+   ...:                Range[4:]: lambda x: 2 + x})
+
+In [8]: f(3), f(4)
+Out[8]: (6, 6)
+```

@@ -53,3 +53,18 @@ class RangeDict:
 
     def __repr__(self):
         return f'{self.__class__.__name__}({self._range_to_value})'
+
+
+class Piecewise(RangeDict):
+    """A dispatch-dict that will automaticall call the correct function with the key passed in, e.g.:
+        ```
+        In [7]: f = Piecewise({Range[:4]: lambda x: 2 * x,
+           ...:                Range[4:]: lambda x: 2 + x})
+
+        In [8]: f(3)
+        Out[8]: 6
+        ```
+    """
+    def __call__(self, key):
+        func = super().__getitem__(key)
+        return func(key)
