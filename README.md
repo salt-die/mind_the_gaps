@@ -15,7 +15,7 @@ Implemented operations include:  | Union
 Range start and end can be anything that's comparable with `<`, `>`.  Also returns a valid length
 for anything with `__sub__` defined.
 
-RangeSets have most the same operations defined as Ranges, but allow non-contiguous groups of Ranges.
+RangeSets have most of the same operations defined as Ranges, but allow non-contiguous groups of Ranges.
 
 RangeDicts allows one to map a continous range of keys to a value.  Ranges in RangeDicts must be mutually disjoint.
 Given a key, the dict is searched quickly with the bisect module, so it's a reasonably fast implementation.
