@@ -4,11 +4,13 @@ Yet another continous range implementation.  Construct ranges from strings: `Ran
 `Range[3:5]`, or just normally `Range(4.5, 35, start_inc=False, end_inc=True)`.  If one doesn't specify whether
 the start or end is included or not, the default is a half-open interval: start included, end excluded.
 
+```
 Implemented operations include:  | Union
                                  & Intersection
                                  ^ Symmetric Difference
                                  ~ Inversion
                                  - Difference
+```
 
 Range start and end can be anything that's comparable with `<`, `>`.  Also returns a valid length
 for anything with `__sub__` defined.
