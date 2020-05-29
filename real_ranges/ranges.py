@@ -16,7 +16,6 @@ RangeSets have the same operations defined, but allow non-contiguous groups of R
 
 RangeDicts allows one to map a continous set of keys to a value.  They disallow intersecting ranges to be added though.
 """
-from contextlib import suppress
 from functools import wraps
 
 from .bases import Immutable, INF, RangeBase, EMPTY_RANGE

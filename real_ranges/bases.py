@@ -29,9 +29,6 @@ class INF(Immutable):
         return hash(float('inf'))
 
 
-INF = INF()
-
-
 class MINUS_INF(Immutable):
     def __lt__(self, other):
         return other is not self
@@ -47,9 +44,6 @@ class MINUS_INF(Immutable):
 
     def __hash__(self):
         return hash(-float('inf'))
-
-
-MINUS_INF = MINUS_INF()
 
 
 class EMPTY_RANGE(RangeBase):
@@ -87,4 +81,6 @@ class EMPTY_RANGE(RangeBase):
         return '∅'
 
 
+INF = INF()
+MINUS_INF = MINUS_INF()
 EMPTY_RANGE = EMPTY_RANGE()
