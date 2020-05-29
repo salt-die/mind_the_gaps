@@ -33,9 +33,11 @@ class RangeDict:
 
     def __getitem__(self, key):
         """Binary search the ranges for one that may contain the key."""
-        i = bisect(self.ranges, key) - 1
+        ranges = self._ranges
+
+        i = bisect(ranges, key) - 1
         with suppress(IndexError):
-            if key in self._ranges[i]:
+            if key in ranges[i]:
                 return self._range_to_value[ranges[i]]
 
         raise KeyError(key)

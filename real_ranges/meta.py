@@ -1,5 +1,5 @@
 from .bases import INF
-
+from contextlib import suppress
 
 def from_string(str_):
     if not str_.startswith(('(', '[')) or not str_.endswith((')', ']')):
