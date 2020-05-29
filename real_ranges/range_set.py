@@ -74,8 +74,6 @@ class RangeSet:
             return other in ranges[i]
         except IndexError:
             return False
-        except TypeError:
-            raise TypeError(f'{type(other).__name__} not comparable to elements in this set')
 
     def __eq__(self, other):
         return self._ranges == other._ranges
