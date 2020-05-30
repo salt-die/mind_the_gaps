@@ -9,9 +9,10 @@ def ensure_type(func):
     """Convert Ranges to RangeSets"""
     @wraps(func)
     def wrapper(self, other):
-        if isinstance(other, r.Range):
+        if isinstance(other, RangeBase):
             other = RangeSet(other)
         if not isinstance(other, RangeSet):
+            print(type(other))
             return NotImplemented
         return func(self, other)
     return wrapper
