@@ -170,7 +170,7 @@ class RangeSet:
                         xored_ranges.append(dif)
                         other_range = next(other_ranges, None)
                         self_range = next(self_ranges, None)
-                    elif other_range < self_range:
+                    elif other_range.upper < self_range.upper:
                         self_range = dif
                         other_range = next(other_ranges, None)
                     else:
@@ -198,6 +198,7 @@ class RangeSet:
         elif self_range:
             xored_ranges.append(self_range)
             xored_ranges.extend(self_ranges)
+
         s = RangeSet()
         s._ranges = xored_ranges
         return s
