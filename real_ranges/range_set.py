@@ -167,7 +167,8 @@ class RangeSet:
                 dif = self_range ^ other_range
                 if isinstance(dif, RangeBase):
                     if other_range.upper == self_range.upper:
-                        xored_ranges.append(dif)
+                        if dif:
+                            xored_ranges.append(dif)
                         other_range = next(other_ranges, None)
                         self_range = next(self_ranges, None)
                     elif other_range.upper < self_range.upper:
