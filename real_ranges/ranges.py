@@ -42,7 +42,7 @@ class Range(RangeBase, metaclass=RangeMeta):
     __slots__ = 'start', 'end', 'start_inc', 'end_inc', '_cmp', '_hash'
 
     def __init__(self, start=None, end=None, /, start_inc=True, end_inc=False):
-        cmp = (start, not start_inc), (end, end_inc)
+        cmp = start, not start_inc, end, end_inc
         hash_ = hash(cmp)
 
         for name, val in zip(self.__slots__, (start, end, start_inc, end_inc, cmp, hash_)):
