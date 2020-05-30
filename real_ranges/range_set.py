@@ -12,7 +12,6 @@ def ensure_type(func):
         if isinstance(other, RangeBase):
             other = RangeSet(other)
         if not isinstance(other, RangeSet):
-            print(type(other))
             return NotImplemented
         return func(self, other)
     return wrapper
