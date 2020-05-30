@@ -109,6 +109,17 @@ class Range(RangeBase, metaclass=RangeMeta):
         return self.will_join(other) and not self.continues(other)
 
     @ensure_order
+    def __and__(self, other):
+        """Returns intersection of two Ranges."""
+        if self.end > other:
+            return other
+
+        if not self.intersects(other):
+            return EMPTY_RANGE
+
+        return Range(other.start, self.end, other.start_inc, self.end_inc)
+
+    @ensure_order
     def __or__(self, other):
         """Returns union of two Ranges."""
         if self.end > other:
@@ -122,17 +133,6 @@ class Range(RangeBase, metaclass=RangeMeta):
     def __ior__(self, other):
         """In place merge -- reminder that Ranges are immutable and this will return a new instance."""
         return self.__or__(other)
-
-    @ensure_order
-    def __and__(self, other):
-        """Returns intersection of two Ranges."""
-        if self.end > other:
-            return other
-
-        if not self.intersects(other):
-            return EMPTY_RANGE
-
-        return Range(other.start, self.end, other.start_inc, self.end_inc)
 
     @ensure_order
     def __xor__(self, other):
