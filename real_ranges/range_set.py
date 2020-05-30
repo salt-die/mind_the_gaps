@@ -44,7 +44,6 @@ class RangeSet:
         elif end and range_.will_join(ranges[end - 1]):
             range_ |= ranges[end - 1]
 
-
         if start == end:
             ranges.insert(start, range_)
         else:
@@ -96,10 +95,14 @@ class RangeSet:
         while other_range and self_range:
             if self_range.intersects(other_range):
                 s.add(self_range & other_range)
+                if self_range.upper < other_range.upper:
+                    self_range = next(self_ranges, None)
+                else:
+                    other_range = next(other_ranges, None)
             elif other_range.end < self_range:
                 other_range = next(other_ranges, None)
-                continue
-            self_range = next(self_ranges, None)
+            else:
+                self_range = next(self_ranges, None)
 
         return s
 
@@ -128,54 +131,32 @@ class RangeSet:
         while other_range and self_range:
             if self_range.intersects(other_range):
                 dif = self_range ^ other_range
-                # Case 1: dif is a single contiguous range -- ranges share at least one endpoint
-                #    Case 1a:
-                #       ranges have equal `end`s
-                #    Case 1b:
-                #       `start`s are equal, but other_range < self_range
-                #    Case 1c:
-                #       `start's are equal, but self_range < other_range
-                # Case 2: dif is a RangeSet with two Ranges -- ranges intersect with no common endpoint
-                #    Case 2a:
-                #        other_range ends before self_range
-                #    Case 2b:
-                #        self_range ends before other_range
                 if isinstance(dif, RangeBase):
-                    # 1a
                     if other_range.upper == self_range.upper:
                         s |= dif
                         other_range = next(other_ranges, None)
                         self_range = next(self_ranges, None)
-                        continue
-                    # 1b
-                    if other_range < self_range:
+                    elif other_range < self_range:
                         self_range = dif
                         other_range = next(other_ranges, None)
-                        continue
-                    # 1c
-                    other_range = dif
-                    self_range = next(self_ranges, None)
-                    continue
-
-                r1, r2 = dif
-                s |= r1
-                # 2a
-                if other_range.end < self_range.end:
-                    self_range = r2
-                    other_range = next(other_ranges, None)
-                    continue
-                # 2b
-                other_range = r2
-                self_range = next(self_ranges, None)
-                continue
-
-            if other_range.end < self_range:
+                    else:
+                        other_range = dif
+                        self_range = next(self_ranges, None)
+                else:
+                    r1, r2 = dif
+                    s |= r1
+                    if other_range.end < self_range.end:
+                        self_range = r2
+                        other_range = next(other_ranges, None)
+                    else:
+                        other_range = r2
+                        self_range = next(self_ranges, None)
+            elif other_range.end < self_range:
                 s |= other_range
                 other_range = next(other_ranges, None)
-                continue
-
-            s |= self_range
-            self_range = next(self_ranges, None)
+            else:
+                s |= self_range
+                self_range = next(self_ranges, None)
 
         # Collect left-overs
         if other_range:

@@ -137,13 +137,6 @@ class Range(RangeBase, metaclass=RangeMeta):
     @ensure_order
     def __xor__(self, other):
         """Symmetric difference of two Ranges.
-        Case 1: Non-intersecting
-        Case 2: Equal Ranges
-        Case 3: starts equal
-        Case 4: ends equal
-        Case 5:
-            a: different and intersecting, but self.end < other.end
-            b: different and intersecting, but self.end > other.end
         """
         if not self.intersects(other):
             return range_set.RangeSet(self, other)
@@ -151,17 +144,16 @@ class Range(RangeBase, metaclass=RangeMeta):
         if self == other:
             return EMPTY_RANGE
 
-        if self.start == other.start and self.start_inc == other.start_inc:
+        if self.lower == other.lower:
             return Range(self.end, other.end, not self.end_inc, other.end_inc)
 
-        if self.end == other.end and self.end_inc == other.end_inc:
+        if self.upper == other.upper:
             return Range(self.start, other.start, self.start_inc, not other.start_inc)
 
         r1 = Range(self.start, other.start, self.start_inc, not other.start_inc)
-        if (self.end, self.end_inc) < (other.end, other.end_inc):
+        if self.lower < other.lower:
             self, other = other, self
         r2 = Range(other.end, self.end, not other.end_inc, self.end_inc)
-
         return range_set.RangeSet(r1, r2)
 
     def __invert__(self):
