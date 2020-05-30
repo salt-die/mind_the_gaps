@@ -6,13 +6,16 @@ from .range_set import RangeSet
 
 
 class RangeDict:
-    def __init__(self, dict_=None):
+    def __init__(self, items=None):
         self._ranges = []
         self._range_to_value = {}
 
-        if dict_ is not None:
-            for key, value in dict_.items():
+        if items is not None:
+            if isinstance(items, dict):
+                items = items.items()
+            for key, value in items:
                 self[key] = value
+
 
     def __setitem__(self, key, value):
         """Keep ranges sorted as we insert them. Raise ValueError if key is not disjoint to its neighbors.

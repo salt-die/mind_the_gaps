@@ -69,8 +69,8 @@ class RangeSet:
             except IndexError:
                 return False
 
+        i = bisect(ranges, other) - 1
         try:
-            i = bisect(ranges, other) - 1
             return other in ranges[i]
         except IndexError:
             return False
