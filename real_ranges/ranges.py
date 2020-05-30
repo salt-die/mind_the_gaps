@@ -151,7 +151,7 @@ class Range(RangeBase, metaclass=RangeMeta):
             return Range(self.start, other.start, self.start_inc, not other.start_inc)
 
         r1 = Range(self.start, other.start, self.start_inc, not other.start_inc)
-        if self.lower < other.lower:
+        if self.upper < other.upper:
             self, other = other, self
         r2 = Range(other.end, self.end, not other.end_inc, self.end_inc)
         return range_set.RangeSet(r1, r2)
