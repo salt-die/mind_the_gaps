@@ -128,24 +128,21 @@ class RangeSet:
         while other_range and self_range:
             if self_range.intersects(other_range):
                 dif = self_range ^ other_range
-                # Case 1: dif is a single contiguous range
-                #    This indicates that the ranges share at least one endpoint.
+                # Case 1: dif is a single contiguous range -- ranges share at least one endpoint
                 #    Case 1a:
-                #       ranges are equal or have equal `end`s
+                #       ranges have equal `end`s
                 #    Case 1b:
                 #       `start`s are equal, but other_range < self_range
                 #    Case 1c:
                 #       `start's are equal, but self_range < other_range
-                # Case 2: dif is a RangeSet with two Ranges
-                #    Ranges do not share an endpoint, but intersect.
+                # Case 2: dif is a RangeSet with two Ranges -- ranges intersect with no common endpoint
                 #    Case 2a:
                 #        other_range ends before self_range
                 #    Case 2b:
                 #        self_range ends before other_range
                 if isinstance(dif, RangeBase):
                     # 1a
-                    if dif is EMPTY_RANGE \
-                      or other_range.end == self_range.end and other_range.end_inc == self_range.end_inc:
+                    if other_range.upper == self_range.upper:
                         s |= dif
                         other_range = next(other_ranges, None)
                         self_range = next(self_ranges, None)

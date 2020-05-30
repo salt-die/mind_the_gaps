@@ -52,6 +52,14 @@ class Range(RangeBase, metaclass=RangeMeta):
     def endpoints(self):
         return self.start, self.end
 
+    @property
+    def lower(self):
+        return self.start, self.start_inc
+
+    @property
+    def upper(self):
+        return self.end, self.end_inc
+
     def __lt__(self, other):
         """Ranges are ordered by their least element first.  If other is not a range, then return True
         if other is greater than all elements in this range.
