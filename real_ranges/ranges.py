@@ -139,7 +139,7 @@ class Range(RangeBase, metaclass=RangeMeta):
         """Symmetric difference of two Ranges.
         """
         if not self.intersects(other):
-            return range_set.RangeSet(self, other)
+            return self | other
 
         if self == other:
             return EMPTY_RANGE

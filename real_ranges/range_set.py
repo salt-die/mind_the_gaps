@@ -91,19 +91,18 @@ class RangeSet:
         self_ranges = iter(self)
         self_range = next(self_ranges, None)
 
-        s = RangeSet()
+        anded_ranges = []
         while other_range and self_range:
             if self_range.intersects(other_range):
-                s.add(self_range & other_range)
-                if self_range.upper < other_range.upper:
-                    self_range = next(self_ranges, None)
-                else:
-                    other_range = next(other_ranges, None)
-            elif other_range.end < self_range:
-                other_range = next(other_ranges, None)
-            else:
-                self_range = next(self_ranges, None)
+                anded_ranges.append(self_range & other_range)
 
+            if self_range.upper < other_range.upper:
+                self_range = next(self_ranges, None)
+            else:
+                other_range = next(other_ranges, None)
+
+        s = RangeSet()
+        s._ranges = anded_ranges
         return s
 
     @ensure_type
@@ -119,17 +118,17 @@ class RangeSet:
 
         unioned_ranges = []
         while other_range and self_range:
-            if self_range.intersects(other_range):
+            if self_range.will_join(other_range):
                 if self_range.upper == other_range.upper:
                     unioned_ranges.append(self_range | other_range)
                     other_range = next(other_ranges, None)
                     self_range = next(self_ranges, None)
-                elif self_range.upper < other_range.upper:
-                    other_range |= self_range
-                    self_range = next(self_ranges, None)
-                else:
+                elif other_range.upper < self_range.upper:
                     self_range |= other_range
                     other_range = next(other_ranges, None)
+                else:
+                    other_range |= self_range
+                    self_range = next(self_ranges, None)
             elif other_range.end < self_range:
                 unioned_ranges.append(other_range)
                 other_range = next(other_ranges, None)
@@ -162,13 +161,13 @@ class RangeSet:
         self_ranges = iter(self)
         self_range = next(self_ranges, None)
 
-        s = RangeSet()
+        xored_ranges = []
         while other_range and self_range:
-            if self_range.intersects(other_range):
+            if self_range.will_join(other_range):
                 dif = self_range ^ other_range
                 if isinstance(dif, RangeBase):
                     if other_range.upper == self_range.upper:
-                        s |= dif
+                        xored_ranges.append(dif)
                         other_range = next(other_ranges, None)
                         self_range = next(self_ranges, None)
                     elif other_range < self_range:
@@ -179,7 +178,7 @@ class RangeSet:
                         self_range = next(self_ranges, None)
                 else:
                     r1, r2 = dif
-                    s |= r1
+                    xored_ranges.append(r1)
                     if other_range.end < self_range.end:
                         self_range = r2
                         other_range = next(other_ranges, None)
@@ -187,19 +186,20 @@ class RangeSet:
                         other_range = r2
                         self_range = next(self_ranges, None)
             elif other_range.end < self_range:
-                s |= other_range
+                xored_ranges.append(other_range)
                 other_range = next(other_ranges, None)
             else:
-                s |= self_range
+                xored_ranges.append(self_range)
                 self_range = next(self_ranges, None)
 
-        # Collect left-overs
         if other_range:
-            s |= other_range
-            s |= RangeSet(*other_ranges)
+            xored_ranges.append(other_range)
+            xored_ranges.extend(other_ranges)
         elif self_range:
-            s |= self_range
-            s |= RangeSet(*self_ranges)
+            xored_ranges.append(self_range)
+            xored_ranges.extend(self_ranges)
+        s = RangeSet()
+        s._ranges = xored_ranges
         return s
 
     def __len__(self):
