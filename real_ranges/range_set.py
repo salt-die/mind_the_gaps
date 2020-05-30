@@ -11,7 +11,7 @@ def ensure_type(func):
     def wrapper(self, other):
         if isinstance(other, RangeBase):
             other = RangeSet(other)
-        if not isinstance(other, RangeSet):
+        elif not isinstance(other, RangeSet):
             return NotImplemented
         return func(self, other)
     return wrapper
@@ -108,9 +108,44 @@ class RangeSet:
 
     @ensure_type
     def __or__(self, other):
-        s = self.copy()
-        for range_ in other:
-            s.add(range_)
+        """Similar to __and__ and __xor__ this implementation of __or__ is O(n + m),
+        where n = len(self) and m = len(other). Note that __ior__ is O(m log n).
+        """
+        other_ranges = iter(other)
+        other_range = next(other_ranges, None)
+
+        self_ranges = iter(self)
+        self_range = next(self_ranges, None)
+
+        unioned_ranges = []
+        while other_range and self_range:
+            if self_range.intersects(other_range):
+                if self_range.upper == other_range.upper:
+                    unioned_ranges.append(self_range | other_range)
+                    other_range = next(other_ranges, None)
+                    self_range = next(self_ranges, None)
+                elif self_range.upper < other_range.upper:
+                    other_range |= self_range
+                    self_range = next(self_ranges, None)
+                else:
+                    self_range |= other_range
+                    other_range = next(other_ranges, None)
+            elif other_range.end < self_range:
+                unioned_ranges.append(other_range)
+                other_range = next(other_ranges, None)
+            else:
+                unioned_ranges.append(self_range)
+                self_range = next(self_ranges, None)
+
+        if other_range:
+            unioned_ranges.append(other_range)
+            unioned_ranges.extend(other_ranges)
+        elif self_range:
+            unioned_ranges.append(self_range)
+            unioned_ranges.extend(self_ranges)
+
+        s = RangeSet()
+        s._ranges = unioned_ranges
         return s
 
     @ensure_type
