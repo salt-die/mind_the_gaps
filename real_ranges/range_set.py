@@ -78,6 +78,12 @@ class RangeSet:
     def __eq__(self, other):
         return self._ranges == other._ranges
 
+    def __hash__(self):
+        """Warning: this hash is provided only as a convenience for constructing RangeDicts -- Depending on it
+        for normal dicts not recommended as all RangeSets will be placed in the same bucket.
+        """
+        return hash(1)
+
     @ensure_type
     def __and__(self, other):
         other_ranges = iter(other)

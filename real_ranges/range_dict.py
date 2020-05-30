@@ -2,6 +2,7 @@ from bisect import bisect
 from contextlib import suppress
 
 from .ranges import Range
+from .range_set import RangeSet
 
 
 class RangeDict:
@@ -16,6 +17,11 @@ class RangeDict:
     def __setitem__(self, key, value):
         """Keep ranges sorted as we insert them. Raise ValueError if key is not disjoint to its neighbors.
         """
+        if isinstance(key, RangeSet):
+            for range_ in key:
+                self.__setitem__(range_, value)
+            return
+
         if not isinstance(key, Range):
             raise TypeError('key must be a non-empty Range')
 
@@ -55,8 +61,12 @@ class RangeDict:
         return f'{self.__class__.__name__}({self._range_to_value})'
 
 
+class DomainError(Exception):
+    pass
+
+
 class Piecewise(RangeDict):
-    """A dispatch-dict that will automaticall call the correct function with the key passed in, e.g.:
+    """A dispatch-dict that will call the correct function with a given key, e.g.:
         ```
         In [7]: f = Piecewise({Range[:4]: lambda x: 2 * x,
            ...:                Range[4:]: lambda x: 2 + x})
@@ -66,5 +76,8 @@ class Piecewise(RangeDict):
         ```
     """
     def __call__(self, key):
-        func = super().__getitem__(key)
-        return func(key)
+        try:
+            func = super().__getitem__(key)
+            return func(key)
+        except KeyError:
+            raise DomainError(f'{key} not in domain')
