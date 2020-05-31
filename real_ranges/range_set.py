@@ -19,8 +19,8 @@ def ensure_type(func):
 def replace_least_upper(self_set, other_set):
     """A helper iterator for the __and__, __or__, and __xor__ methods of RangeSet, this will call next
     on the correct RangeSet iterator (the one that last yielded the range with the least `upper` bound).
-    This incurs some overhead, as we may be repeating some comparisons, but it also increases the readability
-    of the RangeSet dunders.
+    This incurs some overhead, as we repeat comparisons, but it hopefully makes RangeSet dunders easier to
+    follow.
     """
     self_ranges = iter(self_set)
     other_ranges = iter(other_set)
