@@ -16,6 +16,44 @@ def ensure_type(func):
         return func(self, other)
     return wrapper
 
+def yield_least_upper(self_set, other_set):
+    """A helper iterator for the __and__, __or__, and __xor__ methods of RangeSet, this will call next
+    on the correct RangeSet iterator (the one that last yielded the range with the least `upper` bound).
+    This incurs some overhead, as we may be repeating some comparisons, but it also increases the readability
+    of the RangeSet dunders.
+    """
+    self_ranges = iter(self_set)
+    other_ranges = iter(other_set)
+
+    self_range = next(self_ranges, None)
+    other_range = next(other_ranges, None)
+
+    updated_range = yield self_range, other_range
+
+    while self_range and other_range:
+        if self_range.upper == other_range.upper:
+            self_range = next(self_ranges, None)
+            other_range = next(other_ranges, None)
+        elif self_range.upper < other_range.upper:
+            self_range = next(self_ranges, None)
+            if updated_range:
+                other_range = updated_range
+                yield
+        else:
+            other_range = next(other_ranges, None)
+            if updated_range:
+                self_range = updated_range
+                yield
+
+        updated_range = yield self_range, other_range
+
+    if self_range:
+        yield self_range
+        yield from self_ranges
+    elif other_range:
+        yield other_range
+        yield from other_ranges
+
 
 class RangeSet:
     """A collection of mutually disjoint Ranges."""
@@ -85,21 +123,15 @@ class RangeSet:
 
     @ensure_type
     def __and__(self, other):
-        other_ranges = iter(other)
-        other_range = next(other_ranges, None)
-
-        self_ranges = iter(self)
-        self_range = next(self_ranges, None)
+        iter_ranges = yield_least_upper(self, other)
+        self_range, other_range = next(iter_ranges)
 
         anded_ranges = []
-        while other_range and self_range:
+        while self_range and other_range:
             if self_range.intersects(other_range):
                 anded_ranges.append(self_range & other_range)
 
-            if self_range.upper < other_range.upper:
-                self_range = next(self_ranges, None)
-            else:
-                other_range = next(other_ranges, None)
+            self_range, other_range = next(iter_ranges)
 
         s = RangeSet()
         s._ranges = anded_ranges
@@ -110,38 +142,22 @@ class RangeSet:
         """Similar to __and__ and __xor__ this implementation of __or__ is O(n + m),
         where n = len(self) and m = len(other). Note that __ior__ is O(m log n).
         """
-        other_ranges = iter(other)
-        other_range = next(other_ranges, None)
-
-        self_ranges = iter(self)
-        self_range = next(self_ranges, None)
+        iter_ranges = yield_least_upper(self, other)
+        self_range, other_range = next(iter_ranges)
 
         unioned_ranges = []
-        while other_range and self_range:
+        while self_range and other_range:
             if self_range.will_join(other_range):
                 if self_range.upper == other_range.upper:
                     unioned_ranges.append(self_range | other_range)
-                    other_range = next(other_ranges, None)
-                    self_range = next(self_ranges, None)
-                elif other_range.upper < self_range.upper:
-                    self_range |= other_range
-                    other_range = next(other_ranges, None)
                 else:
-                    other_range |= self_range
-                    self_range = next(self_ranges, None)
-            elif other_range.end < self_range:
-                unioned_ranges.append(other_range)
-                other_range = next(other_ranges, None)
+                    iter_ranges.send(self_range | other_range)
             else:
-                unioned_ranges.append(self_range)
-                self_range = next(self_ranges, None)
+                unioned_ranges.append(min(self_range, other_range))
 
-        if other_range:
-            unioned_ranges.append(other_range)
-            unioned_ranges.extend(other_ranges)
-        elif self_range:
-            unioned_ranges.append(self_range)
-            unioned_ranges.extend(self_ranges)
+            self_range, other_range = next(iter_ranges)
+
+        unioned_ranges.extend(iter_ranges)
 
         s = RangeSet()
         s._ranges = unioned_ranges
@@ -155,50 +171,28 @@ class RangeSet:
 
     @ensure_type
     def __xor__(self, other):
-        other_ranges = iter(other)
-        other_range = next(other_ranges, None)
-
-        self_ranges = iter(self)
-        self_range = next(self_ranges, None)
+        iter_ranges = yield_least_upper(self, other)
+        self_range, other_range = next(iter_ranges)
 
         xored_ranges = []
-        while other_range and self_range:
+        while self_range and other_range:
             if self_range.will_join(other_range):
                 dif = self_range ^ other_range
-                if isinstance(dif, RangeBase):
-                    if other_range.upper == self_range.upper:
-                        if dif:
-                            xored_ranges.append(dif)
-                        other_range = next(other_ranges, None)
-                        self_range = next(self_ranges, None)
-                    elif other_range.upper < self_range.upper:
-                        self_range = dif
-                        other_range = next(other_ranges, None)
-                    else:
-                        other_range = dif
-                        self_range = next(self_ranges, None)
-                else:
-                    r1, r2 = dif
-                    xored_ranges.append(r1)
-                    if other_range.end < self_range.end:
-                        self_range = r2
-                        other_range = next(other_ranges, None)
-                    else:
-                        other_range = r2
-                        self_range = next(self_ranges, None)
-            elif other_range.end < self_range:
-                xored_ranges.append(other_range)
-                other_range = next(other_ranges, None)
-            else:
-                xored_ranges.append(self_range)
-                self_range = next(self_ranges, None)
+                if isinstance(dif, RangeSet):
+                    r, dif = dif
+                    xored_ranges.append(r)
 
-        if other_range:
-            xored_ranges.append(other_range)
-            xored_ranges.extend(other_ranges)
-        elif self_range:
-            xored_ranges.append(self_range)
-            xored_ranges.extend(self_ranges)
+                if self_range.upper == other_range.upper:
+                    if dif:  # if difference isn't empty
+                        xored_ranges.append(dif)
+                else:
+                    iter_ranges.send(dif)
+            else:
+                xored_ranges.append(min(self_range, other_range))
+
+            self_range, other_range = next(iter_ranges)
+
+        xored_ranges.extend(iter_ranges)
 
         s = RangeSet()
         s._ranges = xored_ranges
