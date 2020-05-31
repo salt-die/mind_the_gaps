@@ -1,21 +1,3 @@
-"""Continuous Ranges
-
-Yet another continous range implementation.  Construct ranges from strings: Range('[0, 1)'), from slices:
-Range[3:5], or just normally Range(4.5, 35, start_inc=False, end_inc=True).
-
-Implemented operations include:  | Union
-                                 & Intersection
-                                 ^ Symmetric Difference
-                                 ~ Inversion
-                                 - Difference
-
-Range start and end can be anything that's comparable with <, >.  Also returns a valid length
-for anything with __sub__ defined.
-
-RangeSets have the same operations defined, but allow non-contiguous groups of Ranges.
-
-RangeDicts allows one to map a continous set of keys to a value.  They disallow intersecting ranges to be added though.
-"""
 from functools import wraps
 
 from .bases import Immutable, INF, RangeBase, EMPTY_RANGE
@@ -126,7 +108,7 @@ class Range(RangeBase, metaclass=RangeMeta):
             return self
 
         if not self.will_join(other):
-            return range_set.RangeSet(self, other)
+            return range_set.RangeSet(self, other, fast=True)
 
         return Range(self.start, other.end, self.start_inc, other.end_inc)
 
@@ -154,7 +136,7 @@ class Range(RangeBase, metaclass=RangeMeta):
         if self.upper < other.upper:
             self, other = other, self
         r2 = Range(other.end, self.end, not other.end_inc, self.end_inc)
-        return range_set.RangeSet(r1, r2)
+        return range_set.RangeSet(r1, r2, fast=True)
 
     def __invert__(self):
         return BIG_RANGE ^ self

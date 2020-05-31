@@ -16,7 +16,7 @@ def ensure_type(func):
         return func(self, other)
     return wrapper
 
-def yield_least_upper(self_set, other_set):
+def replace_least_upper(self_set, other_set):
     """A helper iterator for the __and__, __or__, and __xor__ methods of RangeSet, this will call next
     on the correct RangeSet iterator (the one that last yielded the range with the least `upper` bound).
     This incurs some overhead, as we may be repeating some comparisons, but it also increases the readability
@@ -28,7 +28,7 @@ def yield_least_upper(self_set, other_set):
     self_range = next(self_ranges, None)
     other_range = next(other_ranges, None)
 
-    updated_range = yield self_range, other_range
+    carry_over = yield self_range, other_range
 
     while self_range and other_range:
         if self_range.upper == other_range.upper:
@@ -36,16 +36,16 @@ def yield_least_upper(self_set, other_set):
             other_range = next(other_ranges, None)
         elif self_range.upper < other_range.upper:
             self_range = next(self_ranges, None)
-            if updated_range:
-                other_range = updated_range
+            if carry_over:
+                other_range = carry_over
                 yield
         else:
             other_range = next(other_ranges, None)
-            if updated_range:
-                self_range = updated_range
+            if carry_over:
+                self_range = carry_over
                 yield
 
-        updated_range = yield self_range, other_range
+        carry_over = yield self_range, other_range
 
     if self_range:
         yield self_range
@@ -56,11 +56,15 @@ def yield_least_upper(self_set, other_set):
 
 
 class RangeSet:
-    """A collection of mutually disjoint Ranges."""
-    def __init__(self, *ranges):
+    """A collection of mutually disjoint Ranges. Use `fast=True` only if ranges are already sorted and disjoint.
+    """
+    def __init__(self, *ranges, fast=False):
         self._ranges = []
-        for range_ in ranges:
-            self.add(range_)
+        if fast:
+            self.ranges.extend(ranges)
+        else:
+            for range_ in ranges:
+                self.add(range_)
 
     def add(self, range_):
         """Keep ranges sorted as we add them, and merge intersecting ranges."""
@@ -123,7 +127,7 @@ class RangeSet:
 
     @ensure_type
     def __and__(self, other):
-        iter_ranges = yield_least_upper(self, other)
+        iter_ranges = replace_least_upper(self, other)
         self_range, other_range = next(iter_ranges)
 
         anded_ranges = []
@@ -142,7 +146,7 @@ class RangeSet:
         """Similar to __and__ and __xor__ this implementation of __or__ is O(n + m),
         where n = len(self) and m = len(other). Note that __ior__ is O(m log n).
         """
-        iter_ranges = yield_least_upper(self, other)
+        iter_ranges = replace_least_upper(self, other)
         self_range, other_range = next(iter_ranges)
 
         unioned_ranges = []
@@ -171,7 +175,7 @@ class RangeSet:
 
     @ensure_type
     def __xor__(self, other):
-        iter_ranges = yield_least_upper(self, other)
+        iter_ranges = replace_least_upper(self, other)
         self_range, other_range = next(iter_ranges)
 
         xored_ranges = []
@@ -183,7 +187,7 @@ class RangeSet:
                     xored_ranges.append(r)
 
                 if self_range.upper == other_range.upper:
-                    if dif:  # if difference isn't empty
+                    if dif:
                         xored_ranges.append(dif)
                 else:
                     iter_ranges.send(dif)
