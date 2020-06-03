@@ -155,7 +155,7 @@ class Range(RangeBase, metaclass=RangeMeta):
         try:
             return self.end - self.start
         except TypeError:
-            raise NotImplementedError(f"no __sub__ defined for type '{type(self.start)}'")
+            raise NotImplementedError(f"no __sub__ defined for type '{type(self.end)}'")
 
     def __repr__(self):
         return f'{"(["[self.start_inc]}{self.start}, {self.end}{")]"[self.end_inc]}'
