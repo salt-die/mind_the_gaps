@@ -12,8 +12,7 @@ Implemented operations include:  | Union
                                  - Difference
 ```
 
-Range start and end can be anything that's comparable with `<`, `>`.  Also returns a valid length
-for anything with `__sub__` defined.
+Range start and end can be anything that's comparable with `<`, `>`.
 
 RangeSets have most of the same operations defined as Ranges, but allow non-contiguous groups of Ranges.
 

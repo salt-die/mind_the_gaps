@@ -149,10 +149,13 @@ class Range(RangeBase, metaclass=RangeMeta):
         yield self.start, self.start_inc
         yield self.end, self.end_inc
 
-    def __len__(self):
+    def length(self):
         if self.start is -INF or self.end is INF:
             return float('inf')
-        return self.end - self.start
+        try:
+            return self.end - self.start
+        except TypeError:
+            raise NotImplementedError(f"no __sub__ defined for type '{type(self.start)}'")
 
     def __repr__(self):
         return f'{"(["[self.start_inc]}{self.start}, {self.end}{")]"[self.end_inc]}'
