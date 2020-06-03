@@ -61,7 +61,7 @@ class RangeSet:
     def __init__(self, *ranges, fast=False):
         self._ranges = []
         if fast:
-            self.ranges.extend(ranges)
+            self._ranges.extend(ranges)
         else:
             for range_ in ranges:
                 self.add(range_)
