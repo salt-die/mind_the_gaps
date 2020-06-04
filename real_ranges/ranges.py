@@ -157,6 +157,10 @@ class Range(RangeBase, metaclass=RangeMeta):
         except TypeError:
             raise NotImplementedError(f"no __sub__ defined for type '{type(self.end)}'")
 
+    def map(self, func):
+        """Returns a new range that's this range transformed by a given function."""
+        return Range(func(self.start), func(self.end), self.start_inc, self.end_inc)
+
     def __repr__(self):
         return f'{"(["[self.start_inc]}{self.start}, {self.end}{")]"[self.end_inc]}'
 
