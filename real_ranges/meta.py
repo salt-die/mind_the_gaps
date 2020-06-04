@@ -57,10 +57,10 @@ class RangeMeta(type):
             with suppress(TypeError, ValueError, IndexError):
                 start, end, start_inc, end_inc = from_string(start)
 
-        if start is None or start is ... or start == '-inf':
+        if start is None or start is ... or start == '-inf' or start is -INF:
             start = -INF
             start_inc = False
-        if end is None or end is ... or end =='inf':
+        if end is None or end is ... or end == 'inf' or end is INF:
             end = INF
             end_inc = False
 

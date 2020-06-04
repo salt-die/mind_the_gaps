@@ -28,6 +28,42 @@ class INF(Immutable):
     def __hash__(self):
         return hash(float('inf'))
 
+    def __add__(self, other):
+        return self
+
+    def __sub__(self, other):
+        return self
+
+    def __mul__(self, other):
+        if other > 0:
+            return self
+        if other < 0:
+            return -INF
+        return 0
+
+    def __truediv__(self, other):
+        if other > 0:
+            return self
+        if other < 0:
+            return -INF
+        raise ZeroDivisionError
+
+    def __radd__(self, other):
+        return self
+
+    def __rsub__(self, other):
+        return -INF
+
+    def __rmul__(self, other):
+        if other > 0:
+            return self
+        if other < 0:
+            return INF
+        return 0
+
+    def __rtruediv__(self, other):
+        return 0
+
 
 class MINUS_INF(Immutable):
     def __lt__(self, other):
@@ -44,6 +80,42 @@ class MINUS_INF(Immutable):
 
     def __hash__(self):
         return hash(-float('inf'))
+
+    def __add__(self, other):
+        return self
+
+    def __sub__(self, other):
+        return self
+
+    def __mul__(self, other):
+        if other > 0:
+            return self
+        if other < 0:
+            return INF
+        return 0
+
+    def __truediv__(self, other):
+        if other > 0:
+            return self
+        if other < 0:
+            return INF
+        raise ZeroDivisionError
+
+    def __radd__(self, other):
+        return self
+
+    def __rsub__(self, other):
+        return INF
+
+    def __rmul__(self, other):
+        if other > 0:
+            return self
+        if other < 0:
+            return INF
+        return 0
+
+    def __rtruediv__(self, other):
+        return 0
 
 
 class EMPTY_RANGE(RangeBase):
