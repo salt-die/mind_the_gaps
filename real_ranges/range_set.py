@@ -217,5 +217,12 @@ class RangeSet:
         s._ranges = self._ranges.copy()
         return s
 
+    @property
+    def measure(self):
+        return sum(r.measure for r in self._ranges)
+
+    def map(self, func):
+        return RangeSet(r.map(func) for r in self._ranges)
+
     def __repr__(self):
         return f'{{{", ".join(map(str, self._ranges))}}}'

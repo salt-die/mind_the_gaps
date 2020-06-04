@@ -149,7 +149,8 @@ class Range(RangeBase, metaclass=RangeMeta):
         yield self.start, self.start_inc
         yield self.end, self.end_inc
 
-    def length(self):
+    @property
+    def measure(self):
         if self.start is -INF or self.end is INF:
             return float('inf')
         try:
