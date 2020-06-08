@@ -31,7 +31,7 @@ class RangeDict:
         if key not in self._range_to_value:
             i = bisect(self._ranges, key)
 
-            for n in (i, i - 1):
+            for n in i, i - 1:
                 with suppress(IndexError):
                     if self._ranges[n].intersects(key):
                         raise ValueError(f'{key} is not disjoint from other Ranges')
