@@ -1,6 +1,7 @@
 from .bases import INF
 from contextlib import suppress
 
+
 def from_string(str_):
     if not str_.startswith(('(', '[')) or not str_.endswith((')', ']')):
         raise ValueError
@@ -77,5 +78,3 @@ class RangeMeta(type):
             start_inc = True
 
         return super(RangeMeta, cls).__call__(start, end, start_inc, end_inc)
-
-

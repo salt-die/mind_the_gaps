@@ -1,4 +1,5 @@
-"""Vars help one create ranges quickly.  One should have the order `start < Var < end` and not `end > Var > start`.
+"""
+Vars help one create ranges quickly.  One should have the order `start < Var < end` and not `end > Var > start`.
 ```
 In [13]: x = Var('x')
 
@@ -8,6 +9,21 @@ Out[14]: [5, 10)
 In [15]: RangeSet(5 <= x < 10, 11 <= x < 12, 13 <= x < 15)
 Out[15]: {[5, 10), [11, 12), [13, 15)}
 ```
+
+Note one can get unexpected errors if not careful:
+```
+In [16]: 2 <= x
+Out[16]: [2, ∞)
+
+In [17]: x < 10
+Out[17]: [2, 10)  # Previous range's start value was stored and used to create this range
+
+In [18]: x < 10
+Out[18]: (-∞, 10)  # Start value was reset to None
+```
+
+`x` stores a range's start value in __gt__ or __ge__so that it can return the correct Range while chaining operators and
+`x.start` will only be reset after a call to __lt__ or __le__.
 """
 from .bases import EMPTY_RANGE
 from .ranges import Range
