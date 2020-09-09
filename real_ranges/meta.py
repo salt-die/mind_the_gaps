@@ -30,8 +30,8 @@ class RangeMeta(type):
             Range[False, 1:3]  == Range(1, 3, start_inc=False)
             Range[1:3, True] == Range(1, 3, end_inc=True)
             Range[False, 1:3, True] == Range(1, 3, False, True)
-
-            Ellipsis and None both map to INF or -INF in slices.
+       In general, we have Range[start_inc, start:end, end_inc] with start_inc, end_inc defaulting to True, False.
+       Ellipsis and None both map to INF or -INF in slices.
 
     This metaclass also caches the "default" range (BIG_RANGE or (-inf, inf)) and returns it when called.
     """
