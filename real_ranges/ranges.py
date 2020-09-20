@@ -42,9 +42,12 @@ class Range(RangeBase, metaclass=RangeMeta):
         return self.end, self.end_inc
 
     def __lt__(self, other):
-        """Ranges are ordered by their least element first.  If other is not a range, then return True
-        if other is greater than all elements in this range.
+        """Ranges are ordered by their least element first.  (With EMPTY_RANGE before everything.)
+        If other is not a range, then return True if other is greater than all elements in this range.
         """
+        if other is EMPTY_RANGE:
+            return False
+
         if isinstance(other, Range):
             return self._cmp < other._cmp
 
@@ -170,9 +173,9 @@ class EMPTY_RANGE(RangeBase):
     def __contains__(self, other):
         return False
 
-    intersects = __lt__ = __contains__
+    intersects = __gt__ = __contains__
 
-    def __gt__(self, other):
+    def __lt__(self, other):
         return True
 
     def __and__(self, other):
