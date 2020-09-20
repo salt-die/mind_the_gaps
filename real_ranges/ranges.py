@@ -75,7 +75,7 @@ class Range(RangeBase, metaclass=RangeMeta):
     @ensure_order
     def will_join(self, other):
         """Return true if the union of self and other is a single contiguous range."""
-        return other.start in self or self.end in other
+        return self is BIG_RANGE or other.start in self or self.end in other
 
     @ensure_order
     def continues(self, other):
