@@ -1,6 +1,5 @@
 from functools import wraps
-
-from .bases import Immutable, INF, RangeBase, EMPTY_RANGE
+from .bases import Immutable, INF, RangeBase
 from .meta import RangeMeta
 from . import range_set
 
@@ -120,11 +119,11 @@ class Range(RangeBase, metaclass=RangeMeta):
     def __xor__(self, other):
         """Symmetric difference of two Ranges.
         """
-        if not self.intersects(other):
-            return self | other
-
         if self == other:
             return EMPTY_RANGE
+
+        if not self.intersects(other):
+            return self | other
 
         if self.lower == other.lower:
             return Range(self.end, other.end, not self.end_inc, other.end_inc)
@@ -167,4 +166,35 @@ class Range(RangeBase, metaclass=RangeMeta):
         return f'{"(["[self.start_inc]}{self.start}, {self.end}{")]"[self.end_inc]}'
 
 
+class EMPTY_RANGE(RangeBase):
+    def __contains__(self, other):
+        return False
+
+    intersects = __lt__ = __contains__
+
+    def __gt__(self, other):
+        return True
+
+    def __and__(self, other):
+        return self
+
+    def __or__(self, other):
+        return other
+
+    __xor__ = __or__
+
+    def __invert__(self):
+        return Range()
+
+    def __len__(self):
+        return 0
+
+    def __bool__(self):
+        return False
+
+    def __repr__(self):
+        return '∅'
+
+
+EMPTY_RANGE = EMPTY_RANGE()
 BIG_RANGE = Range()  # the (-inf, inf) range -- it's big!

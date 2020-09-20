@@ -25,8 +25,7 @@ Out[18]: (-∞, 10)  # Start value was reset to None
 `x` stores a range's start value in __gt__ or __ge__so that it can return the correct Range while chaining operators and
 `x.start` will only be reset after a call to __lt__ or __le__.
 """
-from .bases import EMPTY_RANGE
-from .ranges import Range
+from .ranges import Range, EMPTY_RANGE
 
 class Var:
     def __init__(self, name):

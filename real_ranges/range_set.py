@@ -1,7 +1,6 @@
 from bisect import bisect
 from functools import wraps
-
-from .bases import RangeBase, EMPTY_RANGE
+from .bases import RangeBase
 from . import ranges as r
 
 
@@ -66,7 +65,7 @@ class RangeSet:
 
     def add(self, range_):
         """Keep ranges sorted as we add them, and merge intersecting ranges."""
-        if range_ is EMPTY_RANGE:
+        if range_ is r.EMPTY_RANGE:
             return
 
         ranges = self._ranges
@@ -99,7 +98,7 @@ class RangeSet:
         ranges = self._ranges
 
         if isinstance(other, RangeBase):
-            if other is EMPTY_RANGE:
+            if other is r.EMPTY_RANGE:
                 return True
 
             i = bisect(ranges, other.start) - 1

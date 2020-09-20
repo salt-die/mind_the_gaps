@@ -31,8 +31,10 @@ class INF(Immutable):
     def __add__(self, other):
         return self
 
-    def __sub__(self, other):
-        return self
+    __sub__ = __radd__ = __add__
+
+    def __rsub__(self, other):
+        return -INF
 
     def __mul__(self, other):
         if other > 0:
@@ -41,25 +43,14 @@ class INF(Immutable):
             return -INF
         return 0
 
+    __rmul__ = __mul__
+
     def __truediv__(self, other):
         if other > 0:
             return self
         if other < 0:
             return -INF
         raise ZeroDivisionError
-
-    def __radd__(self, other):
-        return self
-
-    def __rsub__(self, other):
-        return -INF
-
-    def __rmul__(self, other):
-        if other > 0:
-            return self
-        if other < 0:
-            return INF
-        return 0
 
     def __rtruediv__(self, other):
         return 0
@@ -84,8 +75,10 @@ class MINUS_INF(Immutable):
     def __add__(self, other):
         return self
 
-    def __sub__(self, other):
-        return self
+    __sub__ = __radd__ = __add__
+
+    def __rsub__(self, other):
+        return INF
 
     def __mul__(self, other):
         if other > 0:
@@ -94,6 +87,8 @@ class MINUS_INF(Immutable):
             return INF
         return 0
 
+    __rmul__ = __mul__
+
     def __truediv__(self, other):
         if other > 0:
             return self
@@ -101,58 +96,9 @@ class MINUS_INF(Immutable):
             return INF
         raise ZeroDivisionError
 
-    def __radd__(self, other):
-        return self
-
-    def __rsub__(self, other):
-        return INF
-
-    def __rmul__(self, other):
-        if other > 0:
-            return self
-        if other < 0:
-            return INF
-        return 0
-
     def __rtruediv__(self, other):
         return 0
 
 
-class EMPTY_RANGE(RangeBase):
-    def __contains__(self, other):
-        return False
-
-    def intersects(self, other):
-        return False
-
-    def __lt__(self, other):
-        return False
-
-    def __gt__(self, other):
-        return True
-
-    def __and__(self, other):
-        return self
-
-    def __or__(self, other):
-        return other
-
-    def __xor__(self, other):
-        return other
-
-    def __invert__(self):
-        return Range()
-
-    def __len__(self):
-        return 0
-
-    def __bool__(self):
-        return False
-
-    def __repr__(self):
-        return '∅'
-
-
 INF = INF()
 MINUS_INF = MINUS_INF()
-EMPTY_RANGE = EMPTY_RANGE()
