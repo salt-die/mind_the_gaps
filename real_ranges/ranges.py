@@ -54,6 +54,9 @@ class Range(RangeBase, metaclass=RangeMeta):
         return self.end < other or not self.end_inc and self.end == other and not self.end is INF
 
     def __gt__(self, other):
+        if other is EMPTY_RANGE:
+            return True
+
         if isinstance(other, Range):
             return other < self
 
@@ -200,4 +203,4 @@ class EMPTY_RANGE(RangeBase):
 
 
 EMPTY_RANGE = EMPTY_RANGE()
-BIG_RANGE = Range()  # the (-inf, inf) range -- it's big!
+BIG_RANGE = Range()  # The (-inf, inf) range -- it's big!
