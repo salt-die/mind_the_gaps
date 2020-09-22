@@ -1,6 +1,5 @@
 from bisect import bisect
 from functools import wraps
-from .bases import RangeBase
 from . import ranges as r
 
 
@@ -8,7 +7,7 @@ def ensure_type(func):
     """Convert Ranges to RangeSets"""
     @wraps(func)
     def wrapper(self, other):
-        if isinstance(other, RangeBase):
+        if isinstance(other, r.RangeBase):
             other = RangeSet(other)
         elif not isinstance(other, RangeSet):
             return NotImplemented
@@ -97,7 +96,7 @@ class RangeSet:
     def __contains__(self, other):
         ranges = self._ranges
 
-        if isinstance(other, RangeBase):
+        if isinstance(other, r.RangeBase):
             if other is r.EMPTY_RANGE:
                 return True
 
@@ -216,10 +215,10 @@ class RangeSet:
 
     @property
     def measure(self):
-        return sum(r.measure for r in self._ranges)
+        return sum(range_.measure for range_ in self._ranges)
 
     def map(self, func):
-        return RangeSet(*(r.map(func) for r in self._ranges))
+        return RangeSet(*(rrange_.map(func) for range_ in self._ranges))
 
     def __repr__(self):
         return f'{{{", ".join(map(str, self._ranges))}}}'

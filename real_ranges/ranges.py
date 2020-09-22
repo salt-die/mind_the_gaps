@@ -1,7 +1,41 @@
 from functools import wraps
-from .bases import Immutable, INF, RangeBase
+from .inf import Immutable, INF
 from .meta import RangeMeta
 from . import range_set
+
+
+class RangeBase(Immutable):
+    """Annotative base class."""
+
+
+class EMPTY_RANGE(RangeBase):
+    def __contains__(self, other):
+        return False
+
+    intersects = __gt__ = __contains__
+
+    def __lt__(self, other):
+        return True
+
+    def __and__(self, other):
+        return self
+
+    def __or__(self, other):
+        return other
+
+    __xor__ = __or__
+
+    def __invert__(self):
+        return Range()
+
+    def __len__(self):
+        return 0
+
+    def __bool__(self):
+        return False
+
+    def __repr__(self):
+        return '∅'
 
 
 def ensure_order(func):
@@ -160,8 +194,8 @@ class Range(RangeBase, metaclass=RangeMeta):
             return float('inf')
         try:
             return self.end - self.start
-        except TypeError:
-            raise NotImplementedError(f"no __sub__ defined for type '{type(self.end)}'")
+        except TypeError as e:
+            raise NotImplementedError(f"no __sub__ defined for type '{type(self.end).__name__}'") from e
 
     def map(self, func):
         """Returns a new range that's this range transformed by a given function.  Only limited numerical operations
@@ -170,36 +204,6 @@ class Range(RangeBase, metaclass=RangeMeta):
 
     def __repr__(self):
         return f'{"(["[self.start_inc]}{self.start}, {self.end}{")]"[self.end_inc]}'
-
-
-class EMPTY_RANGE(RangeBase):
-    def __contains__(self, other):
-        return False
-
-    intersects = __gt__ = __contains__
-
-    def __lt__(self, other):
-        return True
-
-    def __and__(self, other):
-        return self
-
-    def __or__(self, other):
-        return other
-
-    __xor__ = __or__
-
-    def __invert__(self):
-        return Range()
-
-    def __len__(self):
-        return 0
-
-    def __bool__(self):
-        return False
-
-    def __repr__(self):
-        return '∅'
 
 
 EMPTY_RANGE = EMPTY_RANGE()

@@ -1,4 +1,4 @@
-from .bases import INF
+from .inf import INF
 from contextlib import suppress
 
 

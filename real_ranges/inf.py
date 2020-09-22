@@ -7,10 +7,6 @@ class Immutable:
         raise ImmutableError(f"cannot assign to '{attr}'")
 
 
-class RangeBase(Immutable):
-    """Annotative base class."""
-
-
 class INF(Immutable):
     """INF and -INF are defined to allow infinite values for non-float, non-integer types."""
     def __lt__(self, other):
