@@ -218,7 +218,7 @@ class RangeSet:
         return sum(range_.measure for range_ in self._ranges)
 
     def map(self, func):
-        return RangeSet(*(rrange_.map(func) for range_ in self._ranges))
+        return RangeSet(*(range_.map(func) for range_ in self._ranges))
 
     def __repr__(self):
         return f'{{{", ".join(map(str, self._ranges))}}}'
