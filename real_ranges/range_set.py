@@ -112,10 +112,17 @@ class RangeSet:
         except IndexError:
             return False
 
+    def __eq__(self, other):
+        return self._ranges == other._ranges
+
+    def __hash__(self):
+        """Warning: this hash is provided only as a convenience for constructing RangeDicts -- Depending on it
+        for normal dicts not recommended as all RangeSets will be placed in the same bucket.
+        """
+        return hash(1)
+
     @ensure_type
     def intersects(self, other):
-        ranges = self._ranges
-
         iter_ranges = replace_least_upper(self, other)
         self_range, other_range = next(iter_ranges)
 
@@ -125,15 +132,6 @@ class RangeSet:
             self_range, other_range = next(iter_ranges)
 
         return False
-
-    def __eq__(self, other):
-        return self._ranges == other._ranges
-
-    def __hash__(self):
-        """Warning: this hash is provided only as a convenience for constructing RangeDicts -- Depending on it
-        for normal dicts not recommended as all RangeSets will be placed in the same bucket.
-        """
-        return hash(1)
 
     @ensure_type
     def __and__(self, other):
