@@ -5,17 +5,44 @@ from . import range_set
 
 
 class RangeBase(Immutable):
-    """Annotative base class."""
+    """Range base class."""
+    @property
+    def endpoints(self):
+        return self.start, self.end
+
+    @property
+    def lower(self):
+        return self.start, self.start_inc
+
+    @property
+    def upper(self):
+        return self.end, self.end_inc
+
+    def __iter__(self):
+        yield self.start, self.start_inc
+        yield self.end, self.end_inc
 
 
 class EMPTY_RANGE(RangeBase):
+    start = end = None
+    start_inc = end_inc = False
+
+    @property
+    def measure(self):
+        return 0
+
+    def __bool__(self):
+        return False
+
     def __contains__(self, other):
         return False
 
-    intersects = __gt__ = __contains__
+    intersects = continues = __gt__ = __contains__
 
     def __lt__(self, other):
         return True
+
+    will_join = __lt__
 
     def __and__(self, other):
         return self
@@ -23,16 +50,13 @@ class EMPTY_RANGE(RangeBase):
     def __or__(self, other):
         return other
 
-    __xor__ = __or__
+    __xor__ = __ior__ = __or__
 
     def __invert__(self):
         return Range()
 
-    def __len__(self):
-        return 0
-
-    def __bool__(self):
-        return False
+    def __eq__(self, other):
+        return other is self
 
     def __repr__(self):
         return '∅'
@@ -63,17 +87,11 @@ class Range(RangeBase, metaclass=RangeMeta):
         for name, val in zip(self.__slots__, (start, end, start_inc, end_inc, cmp, hash_)):
             super(Immutable, type(self)).__setattr__(self, name, val)
 
-    @property
-    def endpoints(self):
-        return self.start, self.end
+    def __bool__(self):
+        return True
 
-    @property
-    def lower(self):
-        return self.start, self.start_inc
-
-    @property
-    def upper(self):
-        return self.end, self.end_inc
+    def __hash__(self):
+        return self._hash
 
     def __lt__(self, other):
         """Ranges are ordered by their least element first.  (With EMPTY_RANGE before everything.)
@@ -96,21 +114,15 @@ class Range(RangeBase, metaclass=RangeMeta):
 
         return self.start > other or not self.start_inc and self.start == other and not self.start is -INF
 
-    def __eq__(self, other):
-        return self._cmp == other._cmp
-
-    def __hash__(self):
-        return self._hash
-
     def __contains__(self, value):
         """Return true if value is in the range."""
         return  self.start < value < self.end \
                 or self.start == value and self.start_inc \
                 or self.end == value and self.end_inc
 
-    def __bool__(self):
-        """Shortcut for non-emptyness."""
-        return True
+    @ensure_order
+    def __eq__(self, other):
+        return self._cmp == other._cmp
 
     @ensure_order
     def will_join(self, other):
@@ -151,9 +163,7 @@ class Range(RangeBase, metaclass=RangeMeta):
 
         return Range(self.start, other.end, self.start_inc, other.end_inc)
 
-    def __ior__(self, other):
-        """In place merge -- reminder that Ranges are immutable and this will return a new instance."""
-        return self.__or__(other)
+    __ior__ = __or__
 
     @ensure_order
     def __xor__(self, other):
@@ -182,11 +192,7 @@ class Range(RangeBase, metaclass=RangeMeta):
 
     def __sub__(self, other):
         """Difference of two Ranges."""
-        return ~other & self  # order swapped so RangeSet.__and__ is called
-
-    def __iter__(self):
-        yield self.start, self.start_inc
-        yield self.end, self.end_inc
+        return ~other & self  # order swapped so RangeSet.__and__ is called if other is a RangeSet
 
     @property
     def measure(self):
