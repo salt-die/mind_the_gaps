@@ -112,17 +112,9 @@ class RangeSet:
         except IndexError:
             return False
 
+    @ensure_type
     def intersects(self, other):
         ranges = self._ranges
-
-        if isinstance(other, r.RangeBase):
-            if other is r.EMPTY_RANGE:
-                return False
-
-            for range_ in ranges:
-                if range_.intersects(other):
-                    return True
-            return False
 
         if isinstance(other, RangeSet):
             iter_ranges = replace_least_upper(self, other)
@@ -134,8 +126,6 @@ class RangeSet:
                 self_range, other_range = next(iter_ranges)
 
             return False
-
-        return NotImplemented
 
     def __eq__(self, other):
         return self._ranges == other._ranges
