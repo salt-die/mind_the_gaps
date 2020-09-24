@@ -116,16 +116,15 @@ class RangeSet:
     def intersects(self, other):
         ranges = self._ranges
 
-        if isinstance(other, RangeSet):
-            iter_ranges = replace_least_upper(self, other)
+        iter_ranges = replace_least_upper(self, other)
+        self_range, other_range = next(iter_ranges)
+
+        while self_range and other_range:
+            if self_range.intersects(other_range):
+                return True
             self_range, other_range = next(iter_ranges)
 
-            while self_range and other_range:
-                if self_range.intersects(other_range):
-                    return True
-                self_range, other_range = next(iter_ranges)
-
-            return False
+        return False
 
     def __eq__(self, other):
         return self._ranges == other._ranges
