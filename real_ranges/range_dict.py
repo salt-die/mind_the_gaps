@@ -80,7 +80,8 @@ class Piecewise(RangeDict):
     """
     def __call__(self, key):
         try:
-            func = super().__getitem__(key)
+            func = self[key]
+        except KeyError as e:
+            raise DomainError(f'{key} not in domain') from e
+        else:
             return func(key)
-        except KeyError:
-            raise DomainError(f'{key} not in domain')
