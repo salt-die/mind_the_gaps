@@ -1,5 +1,6 @@
 from bisect import bisect
 from functools import wraps
+from types import GeneratorType
 from . import ranges as r
 
 
@@ -55,6 +56,9 @@ class RangeSet:
     """A collection of mutually disjoint Ranges. Use `fast=True` only if ranges are already sorted and disjoint.
     """
     def __init__(self, *ranges, fast=False):
+        if ranges and isinstance(ranges[0], GeneratorType):
+            ranges = ranges[0]
+
         self._ranges = []
         if fast:
             self._ranges.extend(ranges)
@@ -64,6 +68,9 @@ class RangeSet:
 
     def add(self, range_):
         """Keep ranges sorted as we add them, and merge intersecting ranges."""
+        if not isinstance(range_, r.RangeBase):
+            return NotImplemented
+
         if range_ is r.EMPTY_RANGE:
             return
 
@@ -230,7 +237,9 @@ class RangeSet:
         return sum(range_.measure for range_ in self._ranges)
 
     def map(self, func):
-        return RangeSet(*(range_.map(func) for range_ in self._ranges))
+        return RangeSet(range_.map(func) for range_ in self._ranges)
 
     def __repr__(self):
+        if not self._ranges:
+            return '{∅}'
         return f'{{{", ".join(map(str, self._ranges))}}}'
