@@ -10,7 +10,9 @@ In [15]: RangeSet(5 <= x < 10, 11 <= x < 12, 13 <= x < 15)
 Out[15]: {[5, 10), [11, 12), [13, 15)}
 ```
 
-Note one can get unexpected errors if not careful:
+Warning
+-------
+One can get unexpected errors if not careful:
 ```
 In [16]: 2 <= x
 Out[16]: [2, ∞)
@@ -22,8 +24,11 @@ In [18]: x < 10
 Out[18]: (-∞, 10)  # Start value was reset to None
 ```
 
-`x` stores a range's start value in __gt__ or __ge__so that it can return the correct Range while chaining operators and
-`x.start` will only be reset after a call to __lt__ or __le__.
+Notes
+-----
+`Var` stores a range's start value in __gt__ or __ge__so that it can return the correct Range while chaining operators and
+start will only be reset after a call to __lt__ or __le__.  This is necessary until Python allows rich comparison chaining instead of the current
+short-circuiting behavior.
 """
 from .ranges import Range, EMPTY_RANGE
 
