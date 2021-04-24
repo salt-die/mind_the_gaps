@@ -5,7 +5,8 @@ from . import ranges as r
 
 
 def ensure_type(func):
-    """Convert Ranges to RangeSets"""
+    """Convert Ranges to RangeSets
+    """
     @wraps(func)
     def wrapper(self, other):
         if isinstance(other, r.RangeBase):
@@ -16,7 +17,8 @@ def ensure_type(func):
     return wrapper
 
 def replace_least_upper(self_set, other_set):
-    """A helper iterator for the __and__, __or__, and __xor__ methods of RangeSet, this will call next
+    """
+    A helper iterator for the __and__, __or__, and __xor__ methods of RangeSet, this will call next
     on the correct RangeSet iterator (the one that last yielded the range with the least `upper` bound).
     """
     self_ranges = iter(self_set)
@@ -67,7 +69,8 @@ class RangeSet:
                 self.add(range_)
 
     def add(self, range_):
-        """Keep ranges sorted as we add them, and merge intersecting ranges."""
+        """Keep ranges sorted as we add them, and merge intersecting ranges.
+        """
         if not isinstance(range_, r.RangeBase):
             return NotImplemented
 
@@ -123,7 +126,8 @@ class RangeSet:
         return self._ranges == other._ranges
 
     def __hash__(self):
-        """Warning: this hash is provided only as a convenience for constructing RangeDicts -- Depending on it
+        """
+        Warning: this hash is provided only as a convenience for constructing RangeDicts -- Depending on it
         for normal dicts not recommended as all RangeSets will be placed in the same bucket.
         """
         return hash(1)
@@ -158,7 +162,8 @@ class RangeSet:
 
     @ensure_type
     def __or__(self, other):
-        """Similar to __and__ and __xor__ this implementation of __or__ is O(n + m),
+        """
+        Similar to __and__ and __xor__ this implementation of __or__ is O(n + m),
         where n = len(self) and m = len(other). Note that __ior__ is O(m log n).
         """
         iter_ranges = replace_least_upper(self, other)

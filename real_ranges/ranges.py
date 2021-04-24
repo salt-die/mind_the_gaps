@@ -5,7 +5,8 @@ from . import range_set
 
 
 class RangeBase(Immutable):
-    """Range base class."""
+    """Range base class.
+    """
     @property
     def endpoints(self):
         return self.start, self.end
@@ -94,7 +95,8 @@ class Range(RangeBase, metaclass=RangeMeta):
         return self._hash
 
     def __lt__(self, other):
-        """Ranges are ordered by their least element first.  (With EMPTY_RANGE before everything.)
+        """
+        Ranges are ordered by their least element first.  (With EMPTY_RANGE before everything.)
         If other is not a range, then return True if other is greater than all elements in this range.
         """
         if other is EMPTY_RANGE:
@@ -115,10 +117,13 @@ class Range(RangeBase, metaclass=RangeMeta):
         return self.start > other or not self.start_inc and self.start == other and not self.start is -INF
 
     def __contains__(self, value):
-        """Return true if value is in the range."""
-        return  self.start < value < self.end \
-                or self.start == value and self.start_inc \
-                or self.end == value and self.end_inc
+        """Return true if value is in the range.
+        """
+        return  (
+            self.start < value < self.end
+            or self.start == value and self.start_inc
+            or self.end == value and self.end_inc
+        )
 
     @ensure_order
     def __eq__(self, other):
@@ -126,24 +131,28 @@ class Range(RangeBase, metaclass=RangeMeta):
 
     @ensure_order
     def will_join(self, other):
-        """Return true if the union of self and other is a single contiguous range."""
+        """Return true if the union of self and other is a single contiguous range.
+        """
         return self is BIG_RANGE or other.start in self or self.end in other
 
     @ensure_order
     def continues(self, other):
-        """Return true if either self.end == other.start or self.start == other.end
+        """
+        Return true if either self.end == other.start or self.start == other.end
         and one point is inclusive and the other is exclusive.
         """
         return self.end_inc != other.start_inc and self.end == other.start
 
     @ensure_order
     def intersects(self, other):
-        """Return true if the intersection with 'other' isn't empty."""
+        """Return true if the intersection with 'other' isn't empty.
+        """
         return self.will_join(other) and not self.continues(other)
 
     @ensure_order
     def __and__(self, other):
-        """Returns intersection of two Ranges."""
+        """Returns intersection of two Ranges.
+        """
         if self.end > other:
             return other
 
@@ -154,7 +163,8 @@ class Range(RangeBase, metaclass=RangeMeta):
 
     @ensure_order
     def __or__(self, other):
-        """Returns union of two Ranges."""
+        """Returns union of two Ranges.
+        """
         if self.end > other:
             return self
 
@@ -191,7 +201,8 @@ class Range(RangeBase, metaclass=RangeMeta):
         return BIG_RANGE ^ self
 
     def __sub__(self, other):
-        """Difference of two Ranges."""
+        """Difference of two Ranges.
+        """
         return ~other & self  # order swapped so RangeSet.__and__ is called if other is a RangeSet
 
     @property
@@ -204,8 +215,10 @@ class Range(RangeBase, metaclass=RangeMeta):
             raise NotImplementedError(f"no __sub__ defined for type '{type(self.end).__name__}'") from e
 
     def map(self, func):
-        """Returns a new range that's this range transformed by a given function.  Only limited numerical operations
-        supported for INF and -INF."""
+        """
+        Returns a new range that's this range transformed by a given function.
+        Only limited numerical operations supported for INF and -INF.
+        """
         return Range(func(self.start), func(self.end), self.start_inc, self.end_inc)
 
     def __repr__(self):

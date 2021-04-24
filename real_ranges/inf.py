@@ -8,7 +8,8 @@ class Immutable:
 
 
 class INF(Immutable):
-    """INF and -INF are defined to allow infinite values for non-float, non-integer types."""
+    """INF and -INF are defined to allow infinite values for non-float, non-integer types.
+    """
     def __lt__(self, other):
         return False
 

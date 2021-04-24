@@ -41,7 +41,8 @@ class RangeDict:
         self._range_to_value[key] = value
 
     def __getitem__(self, key):
-        """Binary search the ranges for one that may contain the key."""
+        """Binary search the ranges for one that may contain the key.
+        """
         ranges = self._ranges
 
         i = bisect(ranges, key) - 1
@@ -69,14 +70,15 @@ class DomainError(Exception):
 
 
 class Piecewise(RangeDict):
-    """A dispatch-dict that will call the correct function with a given key, e.g.:
-        ```
-        In [7]: f = Piecewise({Range[:4]: lambda x: 2 * x,
-           ...:                Range[4:]: lambda x: 2 + x})
+    """
+    A dispatch-dict that will call the correct function with a given key, e.g.:
+    ```
+    In [7]: f = Piecewise({Range[:4]: lambda x: 2 * x,
+        ...:                Range[4:]: lambda x: 2 + x})
 
-        In [8]: f(3)
-        Out[8]: 6
-        ```
+    In [8]: f(3)
+    Out[8]: 6
+    ```
     """
     def __call__(self, key):
         try:
