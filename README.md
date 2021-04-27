@@ -1,7 +1,7 @@
 #real_ranges
 ------------
 
-A faster continous range implementation! We've implemented both continuous `Range`s and sets of non-contiguous ranges (`RangeSet`s).
+A faster continous range implementation! We've implemented both `Range` and `RangeSet` (sets of non-contiguous ranges).
 Since `RangeSet`s keep ranges sorted as they're added, we can do set operations in linear time ( O(n + m) ), much faster than usual O(n * m) operations.
 (Note that creating a `RangeSet` is O(n log n) in general, but linear if our ranges are already sorted.)
 
