@@ -237,6 +237,8 @@ class Range:
     def intersects(self, other):
         """Return true if the intersection with 'other' isn't empty.
         """
+        if self.is_empty or other.is_empty:
+            return False
         return self.will_join(other) and not self.continues(other)
 
     @rangeset_compatible
@@ -418,7 +420,7 @@ class RangeSet:
         yield from self._ranges
 
     @property
-    def is_empty:
+    def is_empty(self):
         return not self._ranges
 
     def __bool__(self):
