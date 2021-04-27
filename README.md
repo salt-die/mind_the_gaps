@@ -1,27 +1,24 @@
-Continuous Ranges
+#real_ranges
+------------
 
-Yet another continous range implementation.  Construct ranges from strings: `Range('[0, 1)')`, from slices:
-`Range[3:5]`, or just normally `Range(4.5, 35, start_inc=False, end_inc=True)`.  If one doesn't specify whether
-the start or end is included or not, the default is a half-open interval: start included, end excluded.
+A faster continous range implementation! We've implemented both continuous `Range`s and sets of non-contiguous ranges (`RangeSet`s).
+Since `RangeSet`s keep ranges sorted as they're added, we can do set operations in linear time ( O(n + m) ), much faster than usual O(n * m) operations.
+(Note that creating a `RangeSet` is O(n log n) in general, but linear if our ranges are already sorted.)
 
+Construct `Range`s from:
+| strings| slices | default|
+| --- | --- | --- |
+|`Range('[0, 1)')`| `Range[3:5]`|`Range(4.5, 35, start_inc=False, end_inc=True)`|
+
+(`start_inc=True`, `end_inc=False` are default)
+Range's start and end can be anything that's comparable with `<`, `>`.
 ```
-Implemented operations include:  | Union
-                                 & Intersection
+Implemented operations include:  & Intersection
+                                 | Union
                                  ^ Symmetric Difference
                                  ~ Inversion
                                  - Difference
 ```
-
-Range start and end can be anything that's comparable with `<`, `>`.
-
-RangeSets have most of the same operations defined as Ranges, but allow non-contiguous groups of Ranges.
-
-RangeDicts allows one to map a continous range of keys to a value.  Ranges in RangeDicts must be mutually disjoint.
-Given a key, the dict is searched quickly with the bisect module, so it's a reasonably fast implementation.
-
-We've intentionally left out a lot of Error Catching to make the code easier to grok.  Onus is on the user to not
-break things.
-
 
 How about a reasonable use-case for continous ranges?  Say Bob and Sue have a busy schedule with meetings throughout
 the day and they'd like to know when and if they could find time for each other:
@@ -44,35 +41,4 @@ In [1]: from real_ranges import *
    ...:
 {[08:00:00, 08:30:00), [09:30:00, 10:00:00), [10:30:00, 11:00:00), [16:00:00, 17:00:00)}
 ```
-
 And there you go!  We know exactly which times Bob and Sue could meet!
-
-
-Here's a simple example of a continous-range dict in action:
-
-```py
-In [1]: from real_ranges import *
-
-In [2]: Grades = RangeDict({Range('[90, 100]'): 'A',
-   ...:                     Range[80: 90]: 'B',
-   ...:                     Range[70: 80]: 'C',
-   ...:                     Range[60: 70]: 'D',
-   ...:                     Range[0: 60]: 'F'})
-   ...: Grades[90]
-Out[2]: 'A'
-
-In [3]: Grades[85]
-Out[3]: 'B'
-
-In [4]: Grades[56]
-Out[4]: 'F'
-```
-
-Or a piecewise dispatch-dict:
-```py
-In [7]: f = Piecewise({Range[:4]: lambda x: 2 * x,
-   ...:                Range[4:]: lambda x: 2 + x})
-
-In [8]: f(3), f(4)
-Out[8]: (6, 6)
-```
