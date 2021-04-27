@@ -4,6 +4,30 @@ from .ranges import Range, RangeSet
 
 
 class RangeDict:
+    """
+    RangeDicts allows one to map a continous range of keys to a value.  Ranges in RangeDicts must be mutually disjoint.
+    Given a key, the dict is searched quickly with the bisect module, so it's a reasonably fast implementation.
+
+    Example
+    -------
+    ```py
+    In [1]: from real_ranges import *
+
+    In [2]: Grades = RangeDict({Range('[90, 100]'): 'A',
+    ...:                     Range[80: 90]: 'B',
+    ...:                     Range[70: 80]: 'C',
+    ...:                     Range[60: 70]: 'D',
+    ...:                     Range[0: 60]: 'F'})
+    ...: Grades[90]
+    Out[2]: 'A'
+
+    In [3]: Grades[85]
+    Out[3]: 'B'
+
+    In [4]: Grades[56]
+    Out[4]: 'F'
+    ```
+    """
     def __init__(self, items=None):
         self._ranges = []
         self._dict = {}
@@ -87,7 +111,7 @@ class Piecewise(RangeDict):
     A dispatch-dict that will call the correct function with a given key, e.g.:
     ```
     In [7]: f = Piecewise({Range[:4]: lambda x: 2 * x,
-        ...:                Range[4:]: lambda x: 2 + x})
+        ...:               Range[4:]: lambda x: 2 + x})
 
     In [8]: f(3)
     Out[8]: 6
