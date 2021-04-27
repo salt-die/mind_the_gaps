@@ -283,8 +283,6 @@ class Range:
                               # and piggy-back off the decorators on the other overloaded methods.
 
     def __invert__(self):
-        if self.is_big:
-            return RangeSet()
         return Range() ^ self
 
     @property
