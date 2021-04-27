@@ -101,7 +101,7 @@ class Range:
 
         return cls(args[1].start, args[1].stop, start_inc=args[0], end_inc=args[2])
 
-    def __init__(self, start=None, end=None, /, start_inc=True, end_inc=False):
+    def __new__(cls, start=None, end=None, /, start_inc=True, end_inc=False):
         if isinstance(start, str):
             try:
                 start, end, start_inc, end_inc = from_string(start)
@@ -114,12 +114,17 @@ class Range:
         if end in (None, ..., 'inf'):
             end = INF
 
-        self.start = start
-        self.end = end
-        self.start_inc = start_inc
-        self.end_inc = end_inc
-        self._cmp = start, not start_inc, end, end_inc
-        self._hash = None
+        if start > end or start == end and not (start_inc and end_inc):
+            return RangeSet()  # We've made an empty range.
+
+        r = super().__new__(cls)
+        r.start = start
+        r.end = end
+        r.start_inc = start_inc
+        r.end_inc = end_inc
+        r._cmp = start, not start_inc, end, end_inc
+        r._hash = None
+        return r
 
     @property
     def endpoints(self):
@@ -143,12 +148,8 @@ class Range:
         """
         return self.start == self.end and self.start_inc and self.end_inc
 
-    @property
-    def is_empty(self):
-        return self.start >= self.end and not self.is_degenerate
-
     def __bool__(self):
-        return not self.is_empty
+        return True
 
     @property
     def is_big(self):
@@ -172,9 +173,6 @@ class Range:
         if isinstance(other, Range):
             return self._cmp < other._cmp
 
-        if self.is_empty:
-            return True
-
         return self.end < other or self.end == other and not self.end_inc
 
     def __gt__(self, other):
@@ -188,17 +186,11 @@ class Range:
         if isinstance(other, Range):
             return other < self
 
-        if self.is_empty:
-            return True
-
         return self.start > other or self.start == other and not self.start_inc
 
     def __contains__(self, value):
         """Returns True if value is in the range.
         """
-        if self.is_empty:
-            return False
-
         if self.is_degenerate:
             return self.value == self.start
 
@@ -214,7 +206,7 @@ class Range:
     def __eq__(self, other):
         """Ranges are equal if they contain the same members.
         """
-        return self.is_empty and other.is_empty or self._cmp == other._cmp
+        return self._cmp == other._cmp
 
     @ensure_type
     @ensure_order
@@ -237,8 +229,6 @@ class Range:
     def intersects(self, other):
         """Return true if the intersection with 'other' isn't empty.
         """
-        if self.is_empty or other.is_empty:
-            return False
         return self.will_join(other) and not self.continues(other)
 
     @rangeset_compatible
@@ -296,15 +286,12 @@ class Range:
                               # and piggy-back off the decorators on the other overloaded methods.
 
     def __invert__(self):
-        if self.is_empty:
-            return Range()
+        if self.is_big:
+            return RangeSet()
         return Range() ^ self
 
     @property
     def measure(self):
-        if self.is_empty:
-            return 0
-
         if self.start is NEG_INF or self.end is INF:
             return float('inf')
 
@@ -320,8 +307,6 @@ class Range:
         return f'{type(self).__name__}({self.start}, {self.end}, start_inc={self.start_inc}, end_inc={self.end_inc})'
 
     def __str__(self):
-        if self.is_empty:
-            return '{∅}'
         return f'{"(["[self.start_inc]}{self.start}, {self.end}{")]"[self.end_inc]}'
 
 
@@ -380,10 +365,10 @@ class RangeSet:
         if ranges and isinstance(ranges[0], GeneratorType):
             ranges = ranges[0]
 
+        self._ranges = []
         if fast:
-            self._ranges = [range_ for range_ in ranges if not range_.is_empty]
+            self._ranges.extend(ranges)
         else:
-            self._ranges = []
             for range_ in ranges:
                 self.add(range_)
 
@@ -392,9 +377,6 @@ class RangeSet:
         """
         if not isinstance(range_, Range):
             return NotImplemented
-
-        if range_.is_empty:
-            return
 
         ranges = self._ranges
 
@@ -430,9 +412,6 @@ class RangeSet:
         ranges = self._ranges
 
         if isinstance(other, Range):
-            if other.is_empty:
-                return True
-
             i = bisect(ranges, other.start) - 1
             try:
                 return other == ranges[i]
@@ -529,7 +508,7 @@ class RangeSet:
         while self_range and other_range:
             if self_range.will_join(other_range):
                 dif = self_range ^ other_range
-                if isinstance(dif, RangeSet):
+                if dif and isinstance(dif, RangeSet):
                     r, dif = dif
                     symmetric_difference.append(r)
 
@@ -553,7 +532,7 @@ class RangeSet:
         return len(self._ranges)
 
     def __invert__(self):
-        return self ^ Range()
+        return self ^ RangeSet(Range())
 
     @convert_range_to_rangeset
     @ensure_type
@@ -576,6 +555,4 @@ class RangeSet:
         return f'{type(self).__name__}({{{", ".join(repr(range_) for range_ in self._ranges)}}})'
 
     def __str__(self):
-        if not self._ranges:
-            return '{∅}'
         return f'{{{", ".join(map(str, self._ranges))}}}'
