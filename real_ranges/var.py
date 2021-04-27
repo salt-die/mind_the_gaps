@@ -30,7 +30,7 @@ Notes
 start will only be reset after a call to __lt__ or __le__.  This is necessary until Python allows rich comparison chaining instead of the current
 short-circuiting behavior.
 """
-from .ranges import Range, EMPTY_RANGE
+from .ranges import Range
 
 class Var:
     def __init__(self, name):
@@ -45,29 +45,24 @@ class Var:
         self.start_inc = False
         return Range(other, 'inf', start_inc=False)
 
-    def __lt__(self, other):
-        if self.start is not None:
-            if self.start < other or self.start == other and self.start_inc:
-                r = Range(self.start, other, start_inc=self.start_inc)
-            else:
-                r = EMPTY_RANGE
-            self.start = None
-            return r
-        return Range('-inf', other)
-
     def __ge__(self, other):
         self.start = other
         self.start_inc = True
         return Range(other)
 
+    def __lt__(self, other):
+        if self.start is not None:
+            try:
+                return Range(self.start, other, start_inc=self.start_inc)
+            finally:
+                self.start = None
+        return Range('-inf', other)
+
     def __le__(self, other):
         if self.start is not None:
-            if self.start < other:
-                r = Range(self.start, other, start_inc=self.start_inc, end_inc=True)
-            else:
-                r = EMPTY_RANGE
-
-            self.start = None
-            return r
+            try:
+                return Range(self.start, other, start_inc=self.start_inc, end_inc=True)
+            finally:
+                self.start = None
 
         return Range('-inf', other, end_inc=True)

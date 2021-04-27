@@ -1,14 +1,12 @@
 from bisect import bisect
-from contextlib import suppress
 
-from .ranges import Range
-from .range_set import RangeSet
+from .ranges import Range, RangeSet
 
 
 class RangeDict:
     def __init__(self, items=None):
         self._ranges = []
-        self._range_to_value = {}
+        self._dict = {}
 
         if items is not None:
             if isinstance(items, dict):
@@ -16,6 +14,14 @@ class RangeDict:
             for key, value in items:
                 self[key] = value
 
+    def keys(self):
+        return self._dict.keys()
+
+    def values(self):
+        return self._dict.values()
+
+    def items(self):
+        return self._dict.items()
 
     def __setitem__(self, key, value):
         """Keep ranges sorted as we insert them. Raise ValueError if key is not disjoint to its neighbors.
@@ -25,20 +31,22 @@ class RangeDict:
                 self.__setitem__(range_, value)
             return
 
-        if not isinstance(key, Range):
+        if not isinstance(key, Range) or key.is_empty:
             raise TypeError('key must be a non-empty Range')
 
-        if key not in self._range_to_value:
+        if key not in self._dict:
             i = bisect(self._ranges, key)
 
             for n in i, i - 1:
-                with suppress(IndexError):
+                try:
                     if self._ranges[n].intersects(key):
                         raise ValueError(f'{key} is not disjoint from other Ranges')
+                except IndexError:
+                    pass
 
             self._ranges.insert(i, key)
 
-        self._range_to_value[key] = value
+        self._dict[key] = value
 
     def __getitem__(self, key):
         """Binary search the ranges for one that may contain the key.
@@ -46,23 +54,28 @@ class RangeDict:
         ranges = self._ranges
 
         i = bisect(ranges, key) - 1
-        with suppress(IndexError):
+        try:
             if key in ranges[i]:
-                return self._range_to_value[ranges[i]]
+                return self._dict[ranges[i]]
+        except IndexError:
+            pass
 
         raise KeyError(key)
 
     def __delitem__(self, key):
-        if key not in self._range_to_value:
+        if key not in self._dict:
             raise KeyError(key)
 
-        del self._range_to_value[key]
+        del self._dict[key]
 
         i = bisect(self._ranges, key) - 1
         del self._ranges[i]
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self._range_to_value})'
+        return f'{self.__class__.__name__}({self._dict})'
+
+    def __str__(self):
+        return f'{{{", ".join(f"{range_}: {val}" for range_, val in self.items())}}}'
 
 
 class DomainError(Exception):

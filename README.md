@@ -40,15 +40,9 @@ In [1]: from real_ranges import *
    ...:
    ...: work_day = Range[time(8): time(17)]
    ...:
-   ...: bob_free_time = bob_meeting_times ^ work_day
-   ...: sue_free_time = sue_meeting_times ^ work_day
+   ...: print(work_day - bob_meeting_times - sue_meeting_times)
    ...:
-   ...: print(bob_free_time, sue_free_time, sep='\n')
-   ...:
-   ...: bob_free_time & sue_free_time
-{[08:00:00, 08:30:00), [09:00:00, 11:00:00), [12:00:00, 14:00:00), [16:00:00, 17:00:00)}
-{[08:00:00, 08:30:00), [09:30:00, 10:00:00), [10:30:00, 11:00:00), [14:30:00, 17:00:00)}
-Out[1]: {[08:00:00, 08:30:00), [09:30:00, 10:00:00), [16:00:00, 17:00:00)}
+{[08:00:00, 08:30:00), [09:30:00, 10:00:00), [10:30:00, 11:00:00), [16:00:00, 17:00:00)}
 ```
 
 And there you go!  We know exactly which times Bob and Sue could meet!
