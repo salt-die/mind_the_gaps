@@ -138,20 +138,17 @@ class Range:
         yield self.upper
 
     @property
-    def is_empty(self):
-        return not (
-            self.start < self.end or  # normal case
-            self.start == self.end and self.start_inc == self.end_inc == True  # degenerate case (singleton)
-        )
-
-    def __bool__(self):
-        return not self.is_empty
-
-    @property
     def is_degenerate(self):
         """A Range is degenerate if it only contains a single value.
         """
-        return self.start == self.end and self.start_inc == self.end_inc == True
+        return self.start == self.end and self.start_inc and self.end_inc
+
+    @property
+    def is_empty(self):
+        return self.start >= self.end and not self.is_degenerate
+
+    def __bool__(self):
+        return not self.is_empty
 
     @property
     def is_big(self):
@@ -175,7 +172,10 @@ class Range:
         if isinstance(other, Range):
             return self._cmp < other._cmp
 
-        return self.end < other or not self.end_inc and self.end == other and not self.end is INF
+        if self.is_empty:
+            return True
+
+        return self.end < other or self.end == other and not self.end_inc
 
     def __gt__(self, other):
         """
@@ -188,7 +188,10 @@ class Range:
         if isinstance(other, Range):
             return other < self
 
-        return self.start > other or not self.start_inc and self.start == other and not self.start is NEG_INF
+        if self.is_empty:
+            return True
+
+        return self.start > other or self.start == other and not self.start_inc
 
     def __contains__(self, value):
         """Returns True if value is in the range.
@@ -224,10 +227,9 @@ class Range:
     @ensure_order
     def continues(self, other):
         """
-        Return true if either self.end == other.start or self.start == other.end
-        and one point is inclusive and the other is exclusive.
+        Return true if self.end == other.start and one point is inclusive and the other is exclusive.
         """
-        return self.end_inc != other.start_inc and self.end == other.start
+        return self.end == other.start and self.end_inc != other.start_inc
 
     @rangeset_compatible
     @ensure_type
@@ -270,9 +272,6 @@ class Range:
     def __xor__(self, other):
         """Symmetric difference of two Ranges.
         """
-        if self == other:
-            return RangeSet()  # It's not clear which empty Range we should return, so we return an empty RangeSet
-
         if not self.intersects(other):
             return self | other
 
@@ -291,10 +290,12 @@ class Range:
     def __sub__(self, other):
         """Difference of two Ranges.
         """
-        return self & ~other  # Because we'd have to swap the operands, we avoid decorating this method
+        return self & ~other  # Because `other` won't have a `__rsub__` if it's a `RangeSet`, we avoid decorating this method
                               # and piggy-back off the decorators on the other overloaded methods.
 
     def __invert__(self):
+        if self.is_empty:
+            return Range()
         return Range() ^ self
 
     @property
@@ -317,6 +318,8 @@ class Range:
         return f'{type(self).__name__}({self.start}, {self.end}, start_inc={self.start_inc}, end_inc={self.end_inc})'
 
     def __str__(self):
+        if self.is_empty:
+            return '{∅}'
         return f'{"(["[self.start_inc]}{self.start}, {self.end}{")]"[self.end_inc]}'
 
 
@@ -413,6 +416,10 @@ class RangeSet:
 
     def __iter__(self):
         yield from self._ranges
+
+    @property
+    def is_empty:
+        return not self._ranges
 
     def __bool__(self):
         return bool(self._ranges)
