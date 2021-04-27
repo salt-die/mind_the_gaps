@@ -11,7 +11,7 @@ Construct `Range`s from:
 |`Range('[0, 1)')`| `Range[3:5]`|`Range(4.5, 35, start_inc=False, end_inc=True)`|
 
 (`start_inc=True`, `end_inc=False` are default)
-Range's start and end can be anything that's comparable with `<`, `>`.
+A `Range`'s start and end can be anything that's comparable with `<`, `>`.
 ```
 Implemented operations include:  & Intersection
                                  | Union
