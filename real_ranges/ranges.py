@@ -191,9 +191,6 @@ class Range:
     def __contains__(self, value):
         """Returns True if value is in the range.
         """
-        if self.is_degenerate:
-            return self.value == self.start
-
         return  (
             self.start < value < self.end
             or self.start == value and self.start_inc
@@ -507,16 +504,15 @@ class RangeSet:
         symmetric_difference = []
         while self_range and other_range:
             if self_range.will_join(other_range):
-                dif = self_range ^ other_range
-                if dif and isinstance(dif, RangeSet):
-                    r, dif = dif
-                    symmetric_difference.append(r)
+                if dif := (self_range ^ other_range):
+                    if isinstance(dif, RangeSet):
+                        r, dif = dif
+                        symmetric_difference.append(r)
 
-                if self_range.upper == other_range.upper:
-                    if dif:
+                    if self_range.upper == other_range.upper:
                         symmetric_difference.append(dif)
-                else:
-                    iter_ranges.send(dif)
+                    else:
+                        iter_ranges.send(dif)
             else:
                 symmetric_difference.append(min(self_range, other_range))
 
