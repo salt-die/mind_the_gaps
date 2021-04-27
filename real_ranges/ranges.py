@@ -5,7 +5,7 @@ from types import GeneratorType
 from .constants import INF, NEG_INF
 
 def _parse_end(end):
-    """Helper for `from_string`.  Determines if an endpoint is INF, NEG_ING, int, or float.
+    """Helper for `from_string`.  Determines if an endpoint is INF, NEG_INF, int, or float.
     """
     if end == 'inf':
         return INF
