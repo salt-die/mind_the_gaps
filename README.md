@@ -18,7 +18,7 @@ Implemented operations include:  & Intersection
                                  ~ Inversion
                                  - Difference
 ```
-
+------------------
 How about a reasonable use-case for continous ranges?  Say Bob and Sue have a busy schedule with meetings throughout
 the day and they'd like to know when and if they could find time for each other:
 
