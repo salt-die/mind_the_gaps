@@ -323,26 +323,37 @@ def _replace_least_upper(self_set, other_set):
     Notes
     -----
     This iterator allows one to send in a range to replace one of the ranges being yielded. For instance, let's say you have the two RangeSets:
-    ```py
-    r = RangeSet(Range[0:1], Range[2:3])
-    s = RangeSet(Range[1:2])
+    ```
+    In [2]: r = RangeSet(Range[0:1], Range[2:3])
+       ...: s = RangeSet(Range[1:2])
     ```
     If we want to computer r | s, we yield the first range in both sets:
     ```
-    [0, 1), [1, 2)
+    In [3]: g = _replace_least_upper(r, s)
+       ...: sub_r, sub_s = next(g)
+       ...: sub_r, sub_s
+    Out[3]:
+    (Range(0, 1, start_inc=True, end_inc=False),
+    Range(1, 2, start_inc=True, end_inc=False))
     ```
 
     Union these to get:
     ```
-    [0, 2)
+    In [4]: sub_r | sub_s
+    Out[4]: Range(0, 2, start_inc=True, end_inc=False)
     ```
 
     We send this result back into the generator.  Generator will now yield:
     ```
-    [2, 3), [0, 2)
+    In [5]: g.send(_)
+    In [6]: sub_r, sub_s = next(g)
+       ...: sub_r, sub_s
+    Out[6]:
+    (Range(2, 3, start_inc=True, end_inc=False),
+     Range(0, 2, start_inc=True, end_inc=False))
     ```
 
-    And we can union these to our final result.
+    And we can union these to get our final result.
     """
     self_ranges = iter(self_set)
     other_ranges = iter(other_set)
