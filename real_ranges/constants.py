@@ -73,18 +73,14 @@ class _NegInf:
         return other is self
 
     def __lt__(self, other):
-        # We try other's `__lt__` for convenience of our `Var` class.
-        try:
+        if type(other).__name__ == 'Var':
             return other > self
-        except TypeError:
-            return other is not self
+        return other is not self
 
     def __le__(self, other):
-        # We try other's `__le__` for convenience of our `Var` class.
-        try:
-             return other >= self
-        except TypeError:
-            return True
+        if type(other).__name__ == 'Var':
+            return other >= self
+        return True
 
     def __gt__(self, other):
         return False
