@@ -216,7 +216,7 @@ class Range:
     @ensure_order
     def continues(self, other):
         """
-        Return true if self.end == other.start and one point is inclusive and the other is exclusive.
+        Return true if `self.end == other.start` and one is inclusive and the other is exclusive.
         """
         return self.end == other.start and self.end_inc != other.start_inc
 
@@ -224,7 +224,7 @@ class Range:
     @ensure_type
     @ensure_order
     def intersects(self, other):
-        """Return true if the intersection with 'other' isn't empty.
+        """Return True if the intersection with 'other' isn't empty.
         """
         return self.will_join(other) and not self.continues(other)
 
@@ -319,6 +319,30 @@ def _replace_least_upper(self_set, other_set):
     """
     A helper iterator for the __and__, __or__, and __xor__ methods of RangeSet, this will call next
     on the correct RangeSet iterator (the one that last yielded the range with the least `upper` bound).
+
+    Notes
+    -----
+    This iterator allows one to send in a range to replace one of the ranges being yielded. For instance, let's say you have the two RangeSets:
+    ```py
+    r = RangeSet(Range[0:1], Range[2:3])
+    s = RangeSet(Range[1:2])
+    ```
+    If we want to computer r | s, we yield the first range in both sets:
+    ```
+    [0, 1), [1, 2)
+    ```
+
+    Union these to get:
+    ```
+    [0, 2)
+    ```
+
+    We send this result back into the generator.  Generator will now yield:
+    ```
+    [2, 3), [0, 2)
+    ```
+
+    And we can union these to our final result.
     """
     self_ranges = iter(self_set)
     other_ranges = iter(other_set)
