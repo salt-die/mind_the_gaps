@@ -110,9 +110,13 @@ class Range:
 
         if start in (None, ..., '-inf'):
             start = NEG_INF
+        elif start == 'inf':  # This will result in an empty or degenerate range, but included for completeness.
+            start = INF
 
         if end in (None, ..., 'inf'):
             end = INF
+        elif end == '-inf':
+            end = NEG_INF
 
         if start > end or start == end and not (start_inc and end_inc):
             return RangeSet()  # We've made an empty range.
