@@ -64,6 +64,35 @@ def ensure_order(func):
 class Range:
     __slots__ = 'start', 'end', 'start_inc', 'end_inc', '_cmp', '_hash'
 
+    def __new__(cls, start=None, end=None, /, start_inc=True, end_inc=False):
+        if isinstance(start, str):
+            try:
+                start, end, start_inc, end_inc = from_string(start)
+            except (TypeError, ValueError, IndexError):
+                pass
+
+        if start in (None, ..., '-inf'):
+            start = NEG_INF
+        elif start == 'inf':  # This will result in an empty or degenerate range, but included for completeness.
+            start = INF
+
+        if end in (None, ..., 'inf'):
+            end = INF
+        elif end == '-inf':
+            end = NEG_INF
+
+        if start > end or start == end and not (start_inc and end_inc):
+            return RangeSet()  # We've made an empty range.
+
+        r = super().__new__(cls)
+        r.start = start
+        r.end = end
+        r.start_inc = start_inc
+        r.end_inc = end_inc
+        r._cmp = start, not start_inc, end, end_inc
+        r._hash = None
+        return r
+
     def __class_getitem__(cls, args):
         """
         A very uncommon constructor! This method allows Ranges to be constructed like so:
@@ -100,35 +129,6 @@ class Range:
             return cls(args[0].start, args[0].stop, end_inc=args[1])
 
         return cls(args[1].start, args[1].stop, start_inc=args[0], end_inc=args[2])
-
-    def __new__(cls, start=None, end=None, /, start_inc=True, end_inc=False):
-        if isinstance(start, str):
-            try:
-                start, end, start_inc, end_inc = from_string(start)
-            except (TypeError, ValueError, IndexError):
-                pass
-
-        if start in (None, ..., '-inf'):
-            start = NEG_INF
-        elif start == 'inf':  # This will result in an empty or degenerate range, but included for completeness.
-            start = INF
-
-        if end in (None, ..., 'inf'):
-            end = INF
-        elif end == '-inf':
-            end = NEG_INF
-
-        if start > end or start == end and not (start_inc and end_inc):
-            return RangeSet()  # We've made an empty range.
-
-        r = super().__new__(cls)
-        r.start = start
-        r.end = end
-        r.start_inc = start_inc
-        r.end_inc = end_inc
-        r._cmp = start, not start_inc, end, end_inc
-        r._hash = None
-        return r
 
     @property
     def endpoints(self):
