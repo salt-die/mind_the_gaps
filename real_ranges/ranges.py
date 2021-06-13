@@ -403,34 +403,34 @@ class RangeSet:
         if fast:
             self._ranges.extend(ranges)
         else:
-            for range_ in ranges:
-                self.add(range_)
+            for range in ranges:
+                self.add(range)
 
-    def add(self, range_):
-        """Keep ranges sorted as we add them, and merge intersecting ranges.
+    def add(self, range):
+        """Add a range.
         """
-        if not isinstance(range_, Range):
+        if not isinstance(range, Range):
             return NotImplemented
 
         ranges = self._ranges
 
-        start = bisect(ranges, range_.start)
-        end = bisect(ranges, range_.end)
+        start = bisect(ranges, range.start)
+        end = bisect(ranges, range.end)
 
-        if start and range_.will_join(ranges[start - 1]):
-            range_ |= ranges[start - 1]
+        if start and range.will_join(ranges[start - 1]):
+            range |= ranges[start - 1]
             start -= 1
 
-        if end < len(ranges) and range_.continues(ranges[end]):
-            range_ |= ranges[end]
+        if end < len(ranges) and range.continues(ranges[end]):
+            range |= ranges[end]
             end += 1
-        elif end and range_.will_join(ranges[end - 1]):
-            range_ |= ranges[end - 1]
+        elif end and range.will_join(ranges[end - 1]):
+            range |= ranges[end - 1]
 
         if start == end:
-            ranges.insert(start, range_)
+            ranges.insert(start, range)
         else:
-            ranges[start: end] = [range_]
+            ranges[start: end] = [range]
 
     def __iter__(self):
         yield from self._ranges
@@ -528,8 +528,8 @@ class RangeSet:
     @convert_range_to_rangeset
     @ensure_type
     def __ior__(self, other):
-        for range_ in other:
-            self.add(range_)
+        for range in other:
+            self.add(range)
         return self
 
     @convert_range_to_rangeset
@@ -579,13 +579,13 @@ class RangeSet:
 
     @property
     def measure(self):
-        return sum(range_.measure for range_ in self._ranges)
+        return sum(range.measure for range in self._ranges)
 
     def map(self, func):
-        return RangeSet(range_.map(func) for range_ in self._ranges)
+        return RangeSet(range.map(func) for range in self._ranges)
 
     def __repr__(self):
-        return f'{type(self).__name__}({{{", ".join(repr(range_) for range_ in self._ranges)}}})'
+        return f'{type(self).__name__}({{{", ".join(repr(range) for range in self._ranges)}}})'
 
     def __str__(self):
         return f'{{{", ".join(map(str, self._ranges))}}}'
