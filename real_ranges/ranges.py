@@ -319,21 +319,24 @@ def convert_range_to_rangeset(func):
         return func(self, other)
     return wrapper
 
-def _replace_least_upper(self_set, other_set):
+def _merge(self_set, other_set):
     """
-    A helper iterator for the __and__, __or__, and __xor__ methods of RangeSet, this will call next
-    on the correct RangeSet iterator (the one that last yielded the range with the least `upper` bound).
+    A helper generator for the __and__, __or__, and __xor__ methods of RangeSet.
+    Yields the least range in both `RangeSet`s and on each iteration replaces the range with the
+    least upper bound.
 
     Notes
     -----
-    This iterator allows one to send in a range to replace one of the ranges being yielded. For instance, let's say you have the two RangeSets:
+    This iterator allows one to `send` in a range to replace one of the ranges being yielded.
+    For instance, let's say you have the two RangeSets:
     ```
     In [2]: r = RangeSet(Range[0:1], Range[2:3])
        ...: s = RangeSet(Range[1:2])
     ```
+
     If we want to computer r | s, we yield the first range in both sets:
     ```
-    In [3]: g = _replace_least_upper(r, s)
+    In [3]: g = _merge(r, s)
        ...: sub_r, sub_s = next(g)
        ...: sub_r, sub_s
     Out[3]:
@@ -474,7 +477,7 @@ class RangeSet:
     @convert_range_to_rangeset
     @ensure_type
     def intersects(self, other):
-        iter_ranges = _replace_least_upper(self, other)
+        iter_ranges = _merge(self, other)
         self_range, other_range = next(iter_ranges)
 
         while self_range and other_range:
@@ -487,7 +490,7 @@ class RangeSet:
     @convert_range_to_rangeset
     @ensure_type
     def __and__(self, other):
-        iter_ranges = _replace_least_upper(self, other)
+        iter_ranges = _merge(self, other)
         self_range, other_range = next(iter_ranges)
 
         intersection = []
@@ -504,7 +507,7 @@ class RangeSet:
     @convert_range_to_rangeset
     @ensure_type
     def __or__(self, other):
-        iter_ranges = _replace_least_upper(self, other)
+        iter_ranges = _merge(self, other)
         self_range, other_range = next(iter_ranges)
 
         union = []
@@ -535,7 +538,7 @@ class RangeSet:
     @convert_range_to_rangeset
     @ensure_type
     def __xor__(self, other):
-        iter_ranges = _replace_least_upper(self, other)
+        iter_ranges = _merge(self, other)
         self_range, other_range = next(iter_ranges)
 
         symmetric_difference = []
