@@ -55,7 +55,7 @@ class RangeDict:
                 self.__setitem__(range_, value)
             return
 
-        if not isinstance(key, Range) or key.is_empty:
+        if not isinstance(key, Range):
             raise TypeError('key must be a non-empty Range')
 
         if key not in self._dict:
