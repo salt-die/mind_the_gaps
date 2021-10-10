@@ -1,6 +1,16 @@
-class _Inf:
+def constant(cls):
     """
-    This implementation of infinity is similar to `float('inf')`, except its operators allow non-numeric types.
+    Class decorator that instantiates the class.
+    """
+    return cls()
+
+
+@constant
+class INF:
+    """
+    Infinity for non-numeric types.
+
+    Note multiplication by 0 returns 0 instead of nan. (This mirrors non-finite value behavior in non-standard fields.)
     """
     __slots__ = ()
 
@@ -63,9 +73,12 @@ class _Inf:
         return 0
 
 
-class _NegInf:
+@constant
+class NEG_INF:
     """
-    This implementation of negative infinity is similar to `-float('inf')`, except its operators allow non-numeric types.
+    Negative infinity for non-numeric types.
+
+    Note multiplication by 0 returns 0 instead of nan. (This mirrors non-finite value behavior in non-standard fields.)
     """
     __slots__ = ()
 
@@ -132,9 +145,10 @@ class _NegInf:
         return 0
 
 
-class _Nan:
+@constant
+class NAN:
     """
-    This implementation of nan is similar to `float('nan')`, except its operators allow non-numeric types.
+    A nan for non-numeric types.
     """
     __slots__ = ()
 
@@ -161,8 +175,3 @@ class _Nan:
         if other == 0:
             raise ZeroDivisionError
         return self
-
-
-INF = _Inf()         # These special infinities allow comparison with non-numeric types...
-NEG_INF = _NegInf()  #...
-NAN = _Nan()         #... and this `not a number` also allows comparison with non-numeric types.
