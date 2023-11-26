@@ -80,7 +80,7 @@ class NegativeInfinity(SupportsLessThan):
 @total_ordering
 @dataclass
 class Endpoint[SupportsLessThan]:
-    """An endpoint to a interval."""
+    """An interval endpoint."""
 
     value: SupportsLessThan
     """Value of endpoint."""
