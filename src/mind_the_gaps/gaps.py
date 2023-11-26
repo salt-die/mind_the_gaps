@@ -9,6 +9,7 @@ __all__ = ["PositiveInfinity", "NegativeInfinity", "Endpoint", "Gaps"]
 
 
 def sub(a: bool, b: bool) -> bool:
+    """`a` and not `b`."""
     return a and not b
 
 
@@ -155,10 +156,17 @@ class GapsNotSorted(Exception):
 
 
 @dataclass
-class Gaps:
-    """A set of mutually exclusive continuous intervals."""
+class Gaps[SupportsLessThan]:
+    """
+    A set of mutually exclusive continuous intervals.
 
-    endpoints: list[SupportsLessThan | Endpoint] = field(default_factory=list)
+    Gaps can be created from list of endpoints or from a list of values that support less-than.
+    If created from a list of values, they'll be converted to endpoints with closed boundaries.
+    """
+
+    endpoints: list[SupportsLessThan | Endpoint[SupportsLessThan]] = field(
+        default_factory=list
+    )
 
     def __post_init__(self):
         for i, endpoint in enumerate(self.endpoints):
@@ -183,7 +191,7 @@ class Gaps:
         return Gaps(_merge(self.endpoints, other.endpoints, xor))
 
     def __sub__(self, other: Self) -> Self:
-        return Gaps(_merge(self.endpoints, (~other).endpoints, and_))
+        return Gaps(_merge(self.endpoints, other.endpoints, sub))
 
     def __str__(self):
         return f"{{{", ".join(str(endpoint) for endpoint in self.endpoints)}}}"
