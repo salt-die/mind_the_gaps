@@ -115,7 +115,7 @@ def _merge(
     inside_b: bool = False
     inside_region: bool = False
 
-    MAX_ENDPOINT = Endpoint(PositiveInfinity(), "[")
+    MAX_ENDPOINT = Endpoint(PositiveInfinity(), "(")
     while i < len(a) or j < len(b):
         current_a = a[i] if i < len(a) else MAX_ENDPOINT
         current_b = b[j] if j < len(b) else MAX_ENDPOINT
