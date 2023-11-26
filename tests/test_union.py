@@ -27,5 +27,5 @@ def test_bounded_intersecting_singleton():
 
 def test_bounded_intersecting_empty():
     a = Gaps([0, 2])
-    b = Gaps([Endpoint(0, "("), Endpoint(0, "]")])
+    b = Gaps()
     assert a | b == a
