@@ -79,10 +79,10 @@ class NegativeInfinity(SupportsLessThan):
 
 @total_ordering
 @dataclass
-class Endpoint[SupportsLessThan]:
+class Endpoint[T: SupportsLessThan]:
     """An interval endpoint."""
 
-    value: SupportsLessThan
+    value: T
     """Value of endpoint."""
     boundary: Literal["(", ")", "[", "]"]
     """
