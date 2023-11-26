@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mind_the_gaps"
+description = "A library for unions, intersections, subtractions, and xors of intervals (gaps)."
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "MIT"}
+authors = [{name = "salt-die", email = "salt-die@protonmail.com"}]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dynamic = ["version"]
+
+[project.urls]
+"repository" = "https://github.com/salt-die/mind_the_gaps"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.dynamic]
+version = {attr = "gapsets.__version__"}
+
+[tool.ruff.lint]
+select = [
+    "F",  # pyflakes
+    "I",  # isort
+]
+fixable = ["ALL"]
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]
+pythonpath = "src"
