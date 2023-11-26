@@ -1,4 +1,4 @@
-from mind_the_gaps import Endpoint, Gaps
+from mind_the_gaps import Gaps
 
 
 def test_bounded_disjoint():
@@ -25,7 +25,7 @@ def test_bounded_intersecting_singleton():
     assert a | b == a
 
 
-def test_bounded_intersecting_empty():
+def test_bounded_union_empty():
     a = Gaps([0, 2])
     b = Gaps()
     assert a | b == a
