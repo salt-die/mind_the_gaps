@@ -155,7 +155,7 @@ class GapsNotSorted(Exception):
 
 
 @dataclass
-class Gaps[SupportsLessThan]:
+class Gaps[T: SupportsLessThan]:
     """
     A set of mutually exclusive continuous intervals.
 
@@ -163,9 +163,7 @@ class Gaps[SupportsLessThan]:
     be converted to endpoints with closed boundaries.
     """
 
-    endpoints: list[SupportsLessThan | Endpoint[SupportsLessThan]] = field(
-        default_factory=list
-    )
+    endpoints: list[T | Endpoint[T]] = field(default_factory=list)
 
     def __post_init__(self):
         for i, endpoint in enumerate(self.endpoints):
