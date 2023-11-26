@@ -1,5 +1,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from functools import total_ordering
+from itertools import pairwise
 from operator import and_, or_, xor
 from typing import Literal, Protocol, Self
 
@@ -75,12 +77,7 @@ class NegativeInfinity(SupportsLessThan):
         return "-∞"
 
 
-_OPENS = "(["
-_CLOSES = ")]"
-_CLOSED = "[]"
-_BOUNDARY = ")(", "]["
-
-
+@total_ordering
 @dataclass
 class Endpoint[SupportsLessThan]:
     """An endpoint to a interval."""
@@ -99,14 +96,10 @@ class Endpoint[SupportsLessThan]:
         if self.value != other.value:
             return self.value < other.value
 
-        return (
-            (self.boundary == "[" and other.boundary == "(")
-            or (self.boundary == ")" and other.boundary == "]")
-            or (self.boundary in _CLOSES and other.boundary in _OPENS)
-        )
+        return self.boundary + other.boundary in {"[(", ")]", "][", "](", ")[", ")("}
 
     def __str__(self):
-        if self.boundary in _OPENS:
+        if self.boundary in "([":
             return f"{self.boundary}{self.value}"
         return f"{self.value}{self.boundary}"
 
@@ -139,12 +132,12 @@ def _merge(
         if op(inside_a, inside_b) != inside_region:
             inside_region = not inside_region
 
-            closed = current_endpoint.boundary in _CLOSED
+            closed = current_endpoint.boundary in "[]"
             b_in_a = inside_a and current_b == current_endpoint
             a_in_b = inside_b and current_a == current_endpoint
             if op == sub and b_in_a or op == xor and (a_in_b or b_in_a):
                 closed = not closed
-            boundary = _BOUNDARY[closed][len(endpoints) % 2 == 0]
+            boundary = (")(", "][")[closed][len(endpoints) % 2 == 0]
             if (
                 len(endpoints) > 0
                 and endpoints[-1].value == current_endpoint.value
@@ -157,11 +150,23 @@ def _merge(
     return endpoints
 
 
+class GapsNotSorted(Exception):
+    ...
+
+
 @dataclass
 class Gaps:
-    """A set of continuous intervals."""
+    """A set of mutually exclusive continuous intervals."""
 
-    endpoints: list[Endpoint] = field(default_factory=list)
+    endpoints: list[SupportsLessThan | Endpoint] = field(default_factory=list)
+
+    def __post_init__(self):
+        for i, endpoint in enumerate(self.endpoints):
+            if not isinstance(endpoint, Endpoint):
+                self.endpoints[i] = Endpoint(endpoint, "[" if i % 2 == 0 else "]")
+
+        if any(a >= b for a, b in pairwise(self.endpoints)):
+            raise GapsNotSorted("Intervals overlap or are unsorted.")
 
     def __invert__(self) -> Self:
         return self ^ Gaps(
