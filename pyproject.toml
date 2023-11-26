@@ -23,7 +23,7 @@ dynamic = ["version"]
 where = ["src"]
 
 [tool.setuptools.dynamic]
-version = {attr = "gapsets.__version__"}
+version = {attr = "mind_the_gaps.__version__"}
 
 [tool.ruff.lint]
 select = [
