@@ -1,7 +1,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from functools import total_ordering
-from itertools import pairwise
 from operator import and_, or_, xor
 from typing import Literal, Protocol, Self
 
@@ -173,8 +172,13 @@ class Gaps[SupportsLessThan]:
             if not isinstance(endpoint, Endpoint):
                 self.endpoints[i] = Endpoint(endpoint, "[" if i % 2 == 0 else "]")
 
-        if any(a >= b for a, b in pairwise(self.endpoints)):
-            raise GapsNotSorted("Intervals overlap or are unsorted.")
+        for i in range(len(self.endpoints) - 1):
+            a = self.endpoints[i]
+            b = self.endpoints[i + 1]
+            if a.value > b.value or (
+                a.value == b.value and a.boundary + b.boundary not in {"[]", ")("}
+            ):
+                raise GapsNotSorted("Intervals overlap or are unsorted.")
 
     def __invert__(self) -> Self:
         return self ^ Gaps(
