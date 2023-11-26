@@ -8,18 +8,14 @@ on:
 jobs:
   run_test:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
       - name: Setup Python
-      - uses: actions/setup-python@v4
+        uses: actions/setup-python@v4
         with:
           python-version: "3.12"
       - name: Install dependencies
-        run: |
-          pip install -e .
-          pip install -r docs/requirements.txt
+        run: pip install -e .
       - name: Test with pytest
         run: |
           pip install pytest
