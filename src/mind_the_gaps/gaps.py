@@ -159,8 +159,8 @@ class Gaps[SupportsLessThan]:
     """
     A set of mutually exclusive continuous intervals.
 
-    Gaps can be created from list of endpoints or from a list of values that support less-than.
-    If created from a list of values, they'll be converted to endpoints with closed boundaries.
+    Gaps can be created from list of endpoints and values that support less-than. Values will
+    be converted to endpoints with closed boundaries.
     """
 
     endpoints: list[SupportsLessThan | Endpoint[SupportsLessThan]] = field(
@@ -179,6 +179,41 @@ class Gaps[SupportsLessThan]:
                 a.value == b.value and a.boundary + b.boundary not in {"[]", ")("}
             ):
                 raise GapsNotSorted("Intervals overlap or are unsorted.")
+
+    @classmethod
+    def from_string(cls, gaps: str) -> Self:
+        """
+        Create gaps from a string.
+
+        Values can only be int or float. Uses standard interval notation, i.e., `"{(-inf, 1], [2, 3)}"`.
+        """
+        if gaps[0] != "{" or gaps[-1] != "}":
+            raise ValueError(
+                "Gap string must start and end with curly braces ('{', '}')."
+            )
+
+        endpoints = gaps[1:-1].replace(" ", "").split(",")
+        if len(endpoints) == 1:
+            return cls([])
+
+        for i, endpoint in enumerate(endpoints):
+            if endpoint.startswith(("(", "[")):
+                boundary = endpoint[0]
+                value = endpoint[1:]
+            elif endpoint.endswith((")", "]")):
+                boundary = endpoint[-1]
+                value = endpoint[:-1]
+            else:
+                raise ValueError(f"Invalid endpoint ({endpoint!r}).")
+
+            try:
+                value = int(value)
+            except ValueError:
+                value = float(value)
+
+            endpoints[i] = Endpoint(value, boundary)
+
+        return cls(endpoints)
 
     def __invert__(self) -> Self:
         return self ^ Gaps(
