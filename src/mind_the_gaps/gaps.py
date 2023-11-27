@@ -4,7 +4,7 @@ from functools import total_ordering
 from operator import and_, or_, xor
 from typing import Literal, Protocol, Self
 
-__all__ = ["PositiveInfinity", "NegativeInfinity", "Endpoint", "GapsNotSorted", "Gaps"]
+__all__ = ["PositiveInfinity", "NegativeInfinity", "Endpoint", "Gaps"]
 
 
 def sub(a: bool, b: bool) -> bool:
@@ -157,10 +157,6 @@ def _merge(
     return endpoints
 
 
-class GapsNotSorted(Exception):
-    ...
-
-
 @dataclass
 class Gaps[T: SupportsLessThan]:
     """
@@ -186,10 +182,12 @@ class Gaps[T: SupportsLessThan]:
         for i in range(len(self.endpoints) - 1):
             a = self.endpoints[i]
             b = self.endpoints[i + 1]
-            if a.value > b.value or (
-                a.value == b.value and a.boundary + b.boundary not in {"[]", ")("}
-            ):
-                raise GapsNotSorted("Intervals overlap or are unsorted.")
+            if a.value > b.value:
+                raise ValueError("Intervals unsorted.")
+            if a.value == b.value and a.boundary + b.boundary in {"(]", ")["}:
+                raise ValueError(
+                    f"Intervals not minimally expressed. Endpoints {a} and {b} can be removed."
+                )
 
     @classmethod
     def from_string(cls, gaps: str) -> Self:
