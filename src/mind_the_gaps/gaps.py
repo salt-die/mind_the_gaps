@@ -184,7 +184,7 @@ class Gaps[T: SupportsLessThan]:
             b = self.endpoints[i + 1]
             if a.value > b.value:
                 raise ValueError("Intervals unsorted.")
-            if a.value == b.value and a.boundary + b.boundary in {"(]", ")["}:
+            if a.value == b.value and a.boundary + b.boundary in {"](", ")["}:
                 raise ValueError(
                     f"Intervals not minimally expressed. Endpoints {a} and {b} can be removed."
                 )
