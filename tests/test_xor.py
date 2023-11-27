@@ -25,6 +25,12 @@ def test_bounded_intersecting_singleton():
     assert a ^ b == Gaps([0, Endpoint(1, ")"), Endpoint(1, "("), 2])
 
 
+def test_bounded_missing_singleton():
+    a = Gaps([0, 2])
+    b = Gaps([0, Endpoint(1, ")"), Endpoint(1, "("), 2])
+    assert a ^ b == Gaps([1, 1])
+
+
 def test_empty_xor():
     a = Gaps([0, 2])
     b = Gaps()

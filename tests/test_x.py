@@ -13,3 +13,9 @@ def test_x_open():
 
 def test_x_singleton():
     assert Gaps([0 <= x, x <= 0]) == Gaps([0, 0])
+
+
+def test_missing_singleton():
+    assert Gaps([0 <= x, x < 1, 1 < x, x <= 2]) == Gaps(
+        [0, Endpoint(1, ")"), Endpoint(1, "("), 2]
+    )

@@ -1,4 +1,4 @@
-from mind_the_gaps import Gaps
+from mind_the_gaps import Endpoint, Gaps
 
 
 def test_bounded_disjoint():
@@ -22,6 +22,12 @@ def test_bounded_intersecting_proper():
 def test_bounded_intersecting_singleton():
     a = Gaps([0, 2])
     b = Gaps([1, 1])
+    assert a & b == b
+
+
+def test_bounded_missing_singleton():
+    a = Gaps([0, 2])
+    b = Gaps([0, Endpoint(1, ")"), Endpoint(1, "("), 2])
     assert a & b == b
 
 
