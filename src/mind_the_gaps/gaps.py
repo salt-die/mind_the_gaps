@@ -178,6 +178,10 @@ class Gaps[T: SupportsLessThan]:
         for i, endpoint in enumerate(self.endpoints):
             if not isinstance(endpoint, Endpoint):
                 self.endpoints[i] = Endpoint(endpoint, "[" if i % 2 == 0 else "]")
+            elif i % 2 == 0 and endpoint.boundary in ")]":
+                raise ValueError(f"Expected left boundary, got {endpoint!r}.")
+            elif i % 2 == 1 and endpoint.boundary in "([":
+                raise ValueError(f"Expected right boundary, got {endpoint!r}.")
 
         for i in range(len(self.endpoints) - 1):
             a = self.endpoints[i]
@@ -186,7 +190,7 @@ class Gaps[T: SupportsLessThan]:
                 raise ValueError("Intervals unsorted.")
             if a.value == b.value and a.boundary + b.boundary in {"](", ")["}:
                 raise ValueError(
-                    f"Intervals not minimally expressed. Endpoints {a} and {b} can be removed."
+                    f"Intervals not minimally expressed. Endpoints {a!r} and {b!r} can be removed."
                 )
 
     @classmethod
