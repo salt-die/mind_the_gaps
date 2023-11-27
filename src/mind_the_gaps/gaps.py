@@ -107,7 +107,14 @@ class Endpoint[T: SupportsLessThan]:
 def _merge(
     a: list[Endpoint], b: list[Endpoint], op: Callable[[bool, bool], bool]
 ) -> list[Endpoint]:
-    """Merge two sorted lists of endpoints with a given set operation."""
+    """
+    Merge two sorted lists of endpoints with a given set operation.
+
+    This is a sweep-line algorithm; as each endpoint is encounted one of
+    `inside_a` or `inside_b` is flipped depending on whether the point belongs
+    to `a` or `b`. This may flip `inside_region` (depending on `op`) which adds
+    a new endpoint to the output.
+    """
     endpoints: list[Endpoint] = []
     i: int = 0
     j: int = 0
@@ -159,8 +166,14 @@ class Gaps[T: SupportsLessThan]:
     """
     A set of mutually exclusive continuous intervals.
 
-    Gaps can be created from list of endpoints and values that support less-than. Values will
-    be converted to endpoints with closed boundaries.
+    `Gaps` are created with an ordered sequence of endpoints or values with alternating
+    endpoints representing the left or right endpoint of an interval. Endpoints that are
+    just values and not of type `Endpoint` will be converted to an `Endpoint` with a closed
+    boundary so that ::
+
+        Gaps([1, 2]) == Gaps([Endpoint(1, "["), Endpoint(2, "]")])
+
+    is true.
     """
 
     endpoints: list[T | Endpoint[T]] = field(default_factory=list)
