@@ -4,7 +4,7 @@ from functools import total_ordering
 from operator import and_, or_, xor
 from typing import Literal, Protocol, Self
 
-__all__ = ["PositiveInfinity", "NegativeInfinity", "Endpoint", "Gaps"]
+__all__ = ["PositiveInfinity", "NegativeInfinity", "Endpoint", "GapsNotSorted", "Gaps"]
 
 
 def sub(a: bool, b: bool) -> bool:
