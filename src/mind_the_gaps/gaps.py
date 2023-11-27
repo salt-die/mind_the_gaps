@@ -78,7 +78,7 @@ class NegativeInfinity(SupportsLessThan):
 
 
 @total_ordering
-@dataclass
+@dataclass(frozen=True, slots=True)
 class Endpoint[T: SupportsLessThan]:
     """An interval endpoint."""
 
@@ -88,11 +88,11 @@ class Endpoint[T: SupportsLessThan]:
     """
     The type of boundary.
 
-    A boundary can be either open or closed and either left or right "(" is open
-    and left, ")" is open and right,"[" is closed and left, and "]" is closed and right.
+    `"("` is open and left, `")"` is open and right,`"["` is closed and left, and
+    `"]"` is closed and right.
     """
 
-    def __lt__(self, other: "Endpoint") -> bool:
+    def __lt__(self, other: Self) -> bool:
         if self.value != other.value:
             return self.value < other.value
 
