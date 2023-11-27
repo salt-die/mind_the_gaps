@@ -1,7 +1,8 @@
+from bisect import bisect
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from functools import total_ordering
-from operator import and_, or_, xor
+from operator import and_, attrgetter, or_, xor
 from typing import Literal, Protocol, Self
 
 __all__ = ["PositiveInfinity", "NegativeInfinity", "Endpoint", "Gaps"]
@@ -244,6 +245,16 @@ class Gaps[T: SupportsLessThan]:
 
     def __sub__(self, other: Self) -> Self:
         return Gaps(_merge(self.endpoints, other.endpoints, sub))
+
+    def __contains__(self, value: T) -> bool:
+        i = bisect(self.endpoints, value, key=attrgetter("value"))
+        if i == 0:
+            return False
+
+        if self.endpoints[i - 1].value == value:
+            return self.endpoints[i - 1].boundary in "[]"
+
+        return self.endpoints[i].boundary in "])"
 
     def __str__(self):
         return f"{{{", ".join(str(endpoint) for endpoint in self.endpoints)}}}"
