@@ -176,6 +176,9 @@ class Gaps[T: SupportsLessThan]:
     endpoints: list[T | Endpoint[T]] = field(default_factory=list)
 
     def __post_init__(self):
+        if len(self.endpoints) % 2 == 1:
+            raise ValueError("Need an even number of endpoints.")
+
         for i, endpoint in enumerate(self.endpoints):
             if not isinstance(endpoint, Endpoint):
                 self.endpoints[i] = Endpoint(endpoint, "[" if i % 2 == 0 else "]")

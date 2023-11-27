@@ -48,3 +48,8 @@ def test_wrong_boundary_right_closed():
 def test_wrong_boundary_right_open():
     with pytest.raises(ValueError, match="right"):
         Gaps([0, Endpoint(1, "[")])
+
+
+def test_wrong_number_of_endpoints():
+    with pytest.raises(ValueError, match="endpoints"):
+        Gaps([0, 1, 2])
