@@ -249,6 +249,9 @@ class Gaps[T: SupportsLessThan]:
     def __sub__(self, other: Self) -> Self:
         return Gaps(_merge(self.endpoints, other.endpoints, sub))
 
+    def __bool__(self):
+        return len(self.endpoints) > 0
+
     def __contains__(self, value: T) -> bool:
         i = bisect(self.endpoints, value, key=attrgetter("value"))
         if i == 0:
