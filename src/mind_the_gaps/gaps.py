@@ -5,7 +5,7 @@ from functools import total_ordering
 from operator import and_, attrgetter, or_, xor
 from typing import Literal, Protocol, Self
 
-__all__ = ["PositiveInfinity", "NegativeInfinity", "Endpoint", "Gaps"]
+__all__ = ["Endpoint", "Gaps"]
 
 
 def sub(a: bool, b: bool) -> bool:
@@ -18,64 +18,6 @@ class SupportsLessThan(Protocol):
 
     def __lt__(self, other) -> bool:
         ...
-
-
-class PositiveInfinity(SupportsLessThan):
-    """
-    Positive infinity for non-numeric types.
-
-    Positive infinity is greater-than all other values.
-    """
-
-    def __eq__(self, other: SupportsLessThan) -> bool:
-        return isinstance(other, PositiveInfinity)
-
-    def __lt__(self, _: SupportsLessThan) -> Literal[False]:
-        return False
-
-    def __le__(self, other: SupportsLessThan) -> bool:
-        return isinstance(other, PositiveInfinity)
-
-    def __gt__(self, other: SupportsLessThan) -> bool:
-        return not isinstance(other, PositiveInfinity)
-
-    def __ge__(self, _: SupportsLessThan) -> Literal[True]:
-        return True
-
-    def __repr__(self):
-        return "PositiveInfinity()"
-
-    def __str__(self):
-        return "∞"
-
-
-class NegativeInfinity(SupportsLessThan):
-    """
-    Negative infinity for non-numeric types.
-
-    Negative infinity is less-than all other values.
-    """
-
-    def __eq__(self, other: SupportsLessThan) -> bool:
-        return isinstance(other, NegativeInfinity)
-
-    def __lt__(self, other: SupportsLessThan) -> bool:
-        return not isinstance(other, NegativeInfinity)
-
-    def __le__(self, _: SupportsLessThan) -> Literal[True]:
-        return True
-
-    def __gt__(self, _: SupportsLessThan) -> Literal[False]:
-        return False
-
-    def __ge__(self, other: SupportsLessThan) -> bool:
-        return isinstance(other, NegativeInfinity)
-
-    def __repr__(self):
-        return "NegativeInfinity()"
-
-    def __str__(self):
-        return "-∞"
 
 
 @total_ordering
@@ -123,11 +65,17 @@ def _merge(
     inside_b: bool = False
     inside_region: bool = False
 
-    MAX_ENDPOINT = Endpoint(PositiveInfinity(), "(")
     while i < len(a) or j < len(b):
-        current_a = a[i] if i < len(a) else MAX_ENDPOINT
-        current_b = b[j] if j < len(b) else MAX_ENDPOINT
-        current_endpoint = min(current_a, current_b)
+        if i >= len(a):
+            current_endpoint = current_b = b[j]
+            current_a = None
+        elif j >= len(b):
+            current_endpoint = current_a = a[i]
+            current_b = None
+        else:
+            current_a = a[i]
+            current_b = b[j]
+            current_endpoint = min(current_a, current_b)
 
         if current_a == current_endpoint:
             inside_a = not inside_a
@@ -187,14 +135,15 @@ class Gaps[T: SupportsLessThan]:
             elif i % 2 == 1 and endpoint.boundary in "([":
                 raise ValueError(f"Expected right boundary, got {endpoint!r}.")
 
+        halfopen = {"](", ")[", "(]", "[)"}
         for i in range(len(self.endpoints) - 1):
             a = self.endpoints[i]
             b = self.endpoints[i + 1]
             if a.value > b.value:
                 raise ValueError("Intervals unsorted.")
-            if a.value == b.value and a.boundary + b.boundary in {"](", ")["}:
+            if a.value == b.value and a.boundary + b.boundary in halfopen:
                 raise ValueError(
-                    f"Intervals not minimally expressed. Endpoints {a!r} and {b!r} can be removed."
+                    f"Intervals not minimally expressed. Endpoints {a!r} and {b!r} should be omitted."
                 )
 
     @classmethod
@@ -231,11 +180,6 @@ class Gaps[T: SupportsLessThan]:
             endpoints[i] = Endpoint(value, boundary)
 
         return cls(endpoints)
-
-    def __invert__(self) -> Self:
-        return self ^ Gaps(
-            [Endpoint(NegativeInfinity(), "("), Endpoint(PositiveInfinity(), ")")]
-        )
 
     def __or__(self, other: Self) -> Self:
         return Gaps(_merge(self.endpoints, other.endpoints, or_))

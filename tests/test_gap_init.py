@@ -24,10 +24,16 @@ def test_not_minimal_open_closed():
     with pytest.raises(ValueError, match="not minimally expressed"):
         Gaps([0, Endpoint(1, ")"), 1, 2])
 
+    with pytest.raises(ValueError, match="not minimally expressed"):
+        Gaps([Endpoint(0, "("), 0, 1, 2])
+
 
 def test_not_minimal_closed_open():
     with pytest.raises(ValueError, match="not minimally expressed"):
         Gaps([0, 1, Endpoint(1, "("), 2])
+
+    with pytest.raises(ValueError, match="not minimally expressed"):
+        Gaps([0, Endpoint(0, ")"), 1, 2])
 
 
 def test_wrong_boundary_left_closed():
