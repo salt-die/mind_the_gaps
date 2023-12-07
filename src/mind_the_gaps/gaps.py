@@ -88,17 +88,21 @@ def _merge(
         if op(inside_a, inside_b) != inside_region:
             inside_region = not inside_region
 
-            closed = current_endpoint.boundary in "[]"
+            # Boundary types can swap when differencing depending on
+            # whether the boundary is inside a region.
+            is_closed = current_endpoint.boundary in "[]"
             b_in_a = inside_a and current_b == current_endpoint
             a_in_b = inside_b and current_a == current_endpoint
-            if op == sub and b_in_a or op == xor and (a_in_b or b_in_a):
-                closed = not closed
-            boundary = (")(", "][")[closed][len(endpoints) % 2 == 0]
+            if op is sub and b_in_a or op is xor and (a_in_b or b_in_a):
+                is_closed = not is_closed
+
+            boundary = (")(", "][")[is_closed][len(endpoints) % 2 == 0]
+
             if (
                 len(endpoints) > 0
                 and endpoints[-1].value == current_endpoint.value
                 and endpoints[-1].boundary + boundary not in {"[]", ")("}
-            ):
+            ):  # Remove redundant endpoints such as `0), [0` or `(0, 0]`.
                 endpoints.pop()
             else:
                 endpoints.append(Endpoint(current_endpoint.value, boundary))
