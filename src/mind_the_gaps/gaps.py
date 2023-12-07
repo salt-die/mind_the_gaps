@@ -89,7 +89,7 @@ def _merge(
             inside_region = not inside_region
 
             # Boundary types can swap when differencing depending on
-            # whether the boundary is inside a region.
+            # whether the endpoint is inside a region.
             is_closed = current_endpoint.boundary in "[]"
             b_in_a = inside_a and current_b == current_endpoint
             a_in_b = inside_b and current_a == current_endpoint
