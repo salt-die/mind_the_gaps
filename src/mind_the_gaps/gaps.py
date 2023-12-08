@@ -53,7 +53,7 @@ def _merge(
     """
     Merge two sorted lists of endpoints with a given set operation.
 
-    This is a sweep-line algorithm; as each endpoint is encounted one of
+    This is a sweep-line algorithm; as each endpoint is encountered one of
     `inside_a` or `inside_b` is flipped depending on whether the point belongs
     to `a` or `b`. This may flip `inside_region` (depending on `op`) which adds
     a new endpoint to the output.
