@@ -13,5 +13,9 @@ def test_right_open_not_contained():
     assert 1 not in Gaps([0, Endpoint(1, ")")])
 
 
+def test_value_greater_than_last_endpoint_not_contained():
+    assert 7 not in Gaps([0, 1])
+
+
 def test_right_closed_contained():
     assert 1 in Gaps([0, 1])

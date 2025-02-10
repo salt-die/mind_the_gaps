@@ -16,8 +16,7 @@ def sub(a: bool, b: bool) -> bool:
 class SupportsLessThan(Protocol):
     """Supports the less-than (`<`) operator."""
 
-    def __lt__(self, other) -> bool:
-        ...
+    def __lt__(self, other) -> bool: ...
 
 
 @total_ordering
@@ -139,13 +138,13 @@ class Gaps[T: SupportsLessThan]:
             elif i % 2 == 1 and endpoint.boundary in "([":
                 raise ValueError(f"Expected right boundary, got {endpoint!r}.")
 
-        halfopen = {"](", ")[", "(]", "[)"}
+        not_minimal = {"](", ")[", "(]", "[)", "()"}
         for i in range(len(self.endpoints) - 1):
             a = self.endpoints[i]
             b = self.endpoints[i + 1]
             if a.value > b.value:
                 raise ValueError("Intervals unsorted.")
-            if a.value == b.value and a.boundary + b.boundary in halfopen:
+            if a.value == b.value and a.boundary + b.boundary in not_minimal:
                 raise ValueError(
                     f"Intervals not minimally expressed. Endpoints {a!r} and {b!r} should be omitted."
                 )
@@ -208,7 +207,10 @@ class Gaps[T: SupportsLessThan]:
         if self.endpoints[i - 1].value == value:
             return self.endpoints[i - 1].boundary in "[]"
 
-        return self.endpoints[i].boundary in "])"
+        if i < len(self.endpoints):
+            return self.endpoints[i].boundary in "])"
+
+        return False
 
     def __str__(self):
         return f"{{{", ".join(str(endpoint) for endpoint in self.endpoints)}}}"
