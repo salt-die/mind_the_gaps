@@ -138,13 +138,12 @@ class Gaps[T: SupportsLessThan]:
             elif i % 2 == 1 and endpoint.boundary in "([":
                 raise ValueError(f"Expected right boundary, got {endpoint!r}.")
 
-        not_minimal = {"](", ")[", "(]", "[)", "()"}
         for i in range(len(self.endpoints) - 1):
             a = self.endpoints[i]
             b = self.endpoints[i + 1]
             if a.value > b.value:
                 raise ValueError("Intervals unsorted.")
-            if a.value == b.value and a.boundary + b.boundary in not_minimal:
+            if a.value == b.value and a.boundary + b.boundary not in (")(", "[]"):
                 raise ValueError(
                     f"Intervals not minimally expressed. Endpoints {a!r} and {b!r} should be omitted."
                 )
