@@ -7,8 +7,7 @@ __all__ = ["Var", "x"]
 
 @dataclass
 class Var[T: SupportsLessThan]:
-    """
-    A very convenient constructor for `Endpoints`.
+    """A very convenient constructor for `Endpoints`.
 
     It's best to start with an example::
         >>> from mind_the_gaps import Gaps, Var
@@ -46,8 +45,7 @@ class Var[T: SupportsLessThan]:
 
 
 x = Var("x")
-"""
-A very convenient constructor for `Endpoints`.
+"""A very convenient constructor for `Endpoints`.
 
 It's best to start with an example::
     >>> from mind_the_gaps import Gaps, x

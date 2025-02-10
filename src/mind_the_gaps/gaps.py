@@ -3,9 +3,18 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from functools import total_ordering
 from operator import and_, attrgetter, or_, xor
-from typing import Literal, Protocol, Self
+from typing import Any, Final, Literal, Protocol, Self
 
 __all__ = ["Endpoint", "Gaps"]
+
+Boundary = Literal["(", ")", "[", "]"]
+"""The boundary of an endpoint.
+
+`"("` is open and left, `")"` is open and right,`"["` is closed and left, and
+`"]"` is closed and right.
+"""
+
+_BOUNDARY_ORDER: Final[dict[Boundary, int]] = {")": 0, "[": 1, "]": 1, "(": 2}
 
 
 def sub(a: bool, b: bool) -> bool:
@@ -16,7 +25,7 @@ def sub(a: bool, b: bool) -> bool:
 class SupportsLessThan(Protocol):
     """Supports the less-than (`<`) operator."""
 
-    def __lt__(self, other) -> bool: ...
+    def __lt__(self, other: Any, /) -> bool: ...
 
 
 @total_ordering
@@ -26,9 +35,8 @@ class Endpoint[T: SupportsLessThan]:
 
     value: T
     """Value of endpoint."""
-    boundary: Literal["(", ")", "[", "]"]
-    """
-    The type of boundary.
+    boundary: Boundary
+    """The boundary of an endpoint.
 
     `"("` is open and left, `")"` is open and right,`"["` is closed and left, and
     `"]"` is closed and right.
@@ -38,19 +46,41 @@ class Endpoint[T: SupportsLessThan]:
         if self.value != other.value:
             return self.value < other.value
 
-        return self.boundary + other.boundary in {"[(", ")]", "][", "](", ")[", ")("}
+        return _BOUNDARY_ORDER[self.boundary] < _BOUNDARY_ORDER[other.boundary]
+
+    def __eq__(self, other: Self) -> bool:
+        return (
+            isinstance(other, Endpoint)
+            and self.value == other.value
+            and _BOUNDARY_ORDER[self.boundary] == _BOUNDARY_ORDER[other.boundary]
+        )
 
     def __str__(self):
         if self.boundary in "([":
             return f"{self.boundary}{self.value}"
         return f"{self.value}{self.boundary}"
 
+    @property
+    def is_closed(self) -> bool:
+        return self.boundary in "[]"
+
+    @property
+    def is_open(self) -> bool:
+        return self.boundary in "()"
+
+    @property
+    def is_right(self) -> bool:
+        return self.boundary in "[("
+
+    @property
+    def is_left(self) -> bool:
+        return self.boundary in ")]"
+
 
 def _merge(
     a: list[Endpoint], b: list[Endpoint], op: Callable[[bool, bool], bool]
 ) -> list[Endpoint]:
-    """
-    Merge two sorted lists of endpoints with a given set operation.
+    """Merge two sorted lists of endpoints with a given set operation.
 
     This is a sweep-line algorithm; as each endpoint is encountered one of
     `inside_a` or `inside_b` is flipped depending on whether the point belongs
@@ -66,21 +96,21 @@ def _merge(
 
     while i < len(a) or j < len(b):
         if i >= len(a):
-            current_endpoint = current_b = b[j]
+            current_min = current_b = b[j]
             current_a = None
         elif j >= len(b):
-            current_endpoint = current_a = a[i]
+            current_min = current_a = a[i]
             current_b = None
         else:
             current_a = a[i]
             current_b = b[j]
-            current_endpoint = min(current_a, current_b)
+            current_min = min(current_a, current_b)
 
-        if current_a == current_endpoint:
+        if current_a == current_min:
             inside_a = not inside_a
             i += 1
 
-        if current_b == current_endpoint:
+        if current_b == current_min:
             inside_b = not inside_b
             j += 1
 
@@ -89,9 +119,9 @@ def _merge(
 
             # Boundary types can swap when differencing depending on
             # whether the endpoint is inside a region.
-            is_closed = current_endpoint.boundary in "[]"
-            b_in_a = inside_a and current_b == current_endpoint
-            a_in_b = inside_b and current_a == current_endpoint
+            is_closed = current_min.is_closed
+            b_in_a = inside_a and current_b == current_min
+            a_in_b = inside_b and current_a == current_min
             if op is sub and b_in_a or op is xor and (a_in_b or b_in_a):
                 is_closed = not is_closed
 
@@ -99,20 +129,19 @@ def _merge(
 
             if (
                 len(endpoints) > 0
-                and endpoints[-1].value == current_endpoint.value
+                and endpoints[-1].value == current_min.value
                 and endpoints[-1].boundary + boundary not in {"[]", ")("}
-            ):  # Remove redundant endpoints such as `0), [0` or `(0, 0]`.
+            ):  # Remove redundant endpoints such as `0), [0` or `0], [0`.
                 endpoints.pop()
             else:
-                endpoints.append(Endpoint(current_endpoint.value, boundary))
+                endpoints.append(Endpoint(current_min.value, boundary))
 
     return endpoints
 
 
 @dataclass
 class Gaps[T: SupportsLessThan]:
-    """
-    A set of mutually exclusive continuous intervals.
+    """A set of mutually exclusive continuous intervals.
 
     `Gaps` are created with an ordered sequence of endpoints or values with alternating
     endpoints representing the left or right endpoint of an interval. Endpoints that are
@@ -138,20 +167,22 @@ class Gaps[T: SupportsLessThan]:
             elif i % 2 == 1 and endpoint.boundary in "([":
                 raise ValueError(f"Expected right boundary, got {endpoint!r}.")
 
-        for i in range(len(self.endpoints) - 1):
+        i = 0
+        while i < len(self.endpoints) - 1:
             a = self.endpoints[i]
             b = self.endpoints[i + 1]
-            if a.value > b.value:
-                raise ValueError("Intervals unsorted.")
-            if a.value == b.value and a.boundary + b.boundary not in (")(", "[]"):
-                raise ValueError(
-                    f"Intervals not minimally expressed. Endpoints {a!r} and {b!r} should be omitted."
-                )
+            if a > b:
+                raise ValueError(f"Endpoints unsorted. {a!r} > {b!r}")
+            if a.value == b.value and a.boundary + b.boundary not in {"[]", ")("}:
+                # Intervals aren't minimally expressed, but can be fixed by removing
+                # these endpoints.
+                del self.endpoints[i : i + 2]
+            else:
+                i += 1
 
     @classmethod
     def from_string(cls, gaps: str) -> Self:
-        """
-        Create gaps from a string.
+        """Create gaps from a string.
 
         Values can only be int or float. Uses standard interval notation, i.e., `"{(-inf, 1], [2, 3)}"`.
         """
