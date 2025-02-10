@@ -69,11 +69,11 @@ class Endpoint[T: SupportsLessThan]:
         return self.boundary in "()"
 
     @property
-    def is_right(self) -> bool:
+    def is_left(self) -> bool:
         return self.boundary in "[("
 
     @property
-    def is_left(self) -> bool:
+    def is_right(self) -> bool:
         return self.boundary in ")]"
 
 
