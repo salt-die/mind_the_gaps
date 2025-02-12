@@ -60,3 +60,15 @@ def test_wrong_boundary():
 def test_wrong_number_of_endpoints():
     with pytest.raises(ValueError, match="endpoints"):
         Gaps([0, 1, 2])
+
+
+def test_gap_bool():
+    assert bool(Gaps([0, 1]))
+    assert not bool(Gaps())
+
+
+def test_gap_str():
+    assert str(Gaps([0, 1])) == "{[0, 1]}"
+    assert str(Gaps([Endpoint(0, "("), 1])) == "{(0, 1]}"
+    assert str(Gaps([0, Endpoint(1, ")")])) == "{[0, 1)}"
+    assert str(Gaps([Endpoint(0, "("), Endpoint(1, ")")])) == "{(0, 1)}"

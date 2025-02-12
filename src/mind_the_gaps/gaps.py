@@ -56,7 +56,7 @@ class Endpoint[T: SupportsLessThan]:
         )
 
     def __str__(self):
-        if self.boundary in "([":
+        if self.is_left:
             return f"{self.boundary}{self.value}"
         return f"{self.value}{self.boundary}"
 
@@ -162,9 +162,9 @@ class Gaps[T: SupportsLessThan]:
         for i, endpoint in enumerate(self.endpoints):
             if not isinstance(endpoint, Endpoint):
                 self.endpoints[i] = Endpoint(endpoint, "[" if i % 2 == 0 else "]")
-            elif i % 2 == 0 and endpoint.boundary in ")]":
+            elif i % 2 == 0 and endpoint.is_right:
                 raise ValueError(f"Expected left boundary, got {endpoint!r}.")
-            elif i % 2 == 1 and endpoint.boundary in "([":
+            elif i % 2 == 1 and endpoint.is_left:
                 raise ValueError(f"Expected right boundary, got {endpoint!r}.")
 
         i = 0
@@ -235,10 +235,10 @@ class Gaps[T: SupportsLessThan]:
             return False
 
         if self.endpoints[i - 1].value == value:
-            return self.endpoints[i - 1].boundary in "[]"
+            return self.endpoints[i - 1].is_closed
 
         if i < len(self.endpoints):
-            return self.endpoints[i].boundary in "])"
+            return self.endpoints[i].is_right
 
         return False
 

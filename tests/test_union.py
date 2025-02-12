@@ -35,3 +35,15 @@ def test_empty_union():
     a = Gaps([0, 2])
     b = Gaps()
     assert a | b == a
+
+
+def test_join_closed_open():
+    a = Gaps([0, 1])
+    b = Gaps([Endpoint(1, "("), 2])
+    assert a | b == Gaps([0, 2])
+
+
+def test_join_open_closed():
+    a = Gaps([0, Endpoint(1, ")")])
+    b = Gaps([1, 2])
+    assert a | b == Gaps([0, 2])

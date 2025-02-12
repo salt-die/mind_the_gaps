@@ -1,6 +1,10 @@
 from mind_the_gaps import Endpoint, Gaps, x
 
 
+def test_x_str():
+    assert str(x) == "x"
+
+
 def test_x_closed():
     assert Gaps([0 <= x, x <= 1, 2 <= x, x <= 3]) == Gaps([0, 1, 2, 3])
 
