@@ -72,3 +72,17 @@ def test_gap_str():
     assert str(Gaps([Endpoint(0, "("), 1])) == "{(0, 1]}"
     assert str(Gaps([0, Endpoint(1, ")")])) == "{[0, 1)}"
     assert str(Gaps([Endpoint(0, "("), Endpoint(1, ")")])) == "{(0, 1)}"
+
+
+def test_gap_not_implemented():
+    with pytest.raises(TypeError):
+        Gaps([]) | None
+
+    with pytest.raises(TypeError):
+        Gaps([]) - None
+
+    with pytest.raises(TypeError):
+        Gaps([]) & None
+
+    with pytest.raises(TypeError):
+        Gaps([]) ^ None
