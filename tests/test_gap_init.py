@@ -76,13 +76,13 @@ def test_gap_str():
 
 def test_gap_not_implemented():
     with pytest.raises(TypeError):
-        Gaps([]) | None
+        Gaps() | None
 
     with pytest.raises(TypeError):
-        Gaps([]) - None
+        Gaps() - None
 
     with pytest.raises(TypeError):
-        Gaps([]) & None
+        Gaps() & None
 
     with pytest.raises(TypeError):
-        Gaps([]) ^ None
+        Gaps() ^ None
