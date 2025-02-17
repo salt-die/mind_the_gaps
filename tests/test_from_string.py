@@ -10,6 +10,12 @@ def test_malformed_string():
     with pytest.raises(ValueError, match="Invalid endpoint"):
         Gaps.from_string("{[0, 1, 2}")
 
+    with pytest.raises(ValueError, match="could not convert"):
+        Gaps.from_string("{[0)}")
+
+    with pytest.raises(ValueError, match="could not convert"):
+        Gaps.from_string("{(0]}")
+
 
 def test_from_string_closed():
     assert Gaps.from_string("{[0, 1], [2, 3]}") == Gaps([0, 1, 2, 3])
