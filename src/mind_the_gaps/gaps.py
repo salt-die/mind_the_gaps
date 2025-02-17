@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from bisect import bisect
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -42,16 +44,21 @@ class Endpoint[T: SupportsLessThan]:
     `"]"` is closed and right.
     """
 
-    def __lt__(self, other: Self) -> bool:
+    def __lt__(self, other: Endpoint) -> bool:
+        if not isinstance(other, Endpoint):
+            return NotImplemented
+
         if self.value != other.value:
             return self.value < other.value
 
         return _BOUNDARY_ORDER[self.boundary] < _BOUNDARY_ORDER[other.boundary]
 
-    def __eq__(self, other: Self) -> bool:
+    def __eq__(self, other: Endpoint) -> bool:
+        if not isinstance(other, Endpoint):
+            return NotImplemented
+
         return (
-            isinstance(other, Endpoint)
-            and self.value == other.value
+            self.value == other.value
             and _BOUNDARY_ORDER[self.boundary] == _BOUNDARY_ORDER[other.boundary]
         )
 
@@ -155,7 +162,7 @@ class Gaps[T: SupportsLessThan]:
 
     endpoints: list[T | Endpoint[T]] = field(default_factory=list)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if len(self.endpoints) % 2 == 1:
             raise ValueError("Need an even number of endpoints.")
 
@@ -214,19 +221,31 @@ class Gaps[T: SupportsLessThan]:
 
         return cls(endpoints)
 
-    def __or__(self, other: Self) -> Self:
-        return Gaps(_merge(self.endpoints, other.endpoints, or_))
+    def __or__(self, other: Gaps) -> Self:
+        if not isinstance(other, Gaps):
+            return NotImplemented
 
-    def __and__(self, other: Self) -> Self:
-        return Gaps(_merge(self.endpoints, other.endpoints, and_))
+        return type(self)(_merge(self.endpoints, other.endpoints, or_))
 
-    def __xor__(self, other: Self) -> Self:
-        return Gaps(_merge(self.endpoints, other.endpoints, xor))
+    def __and__(self, other: Gaps) -> Self:
+        if not isinstance(other, Gaps):
+            return NotImplemented
 
-    def __sub__(self, other: Self) -> Self:
-        return Gaps(_merge(self.endpoints, other.endpoints, sub))
+        return type(self)(_merge(self.endpoints, other.endpoints, and_))
 
-    def __bool__(self):
+    def __xor__(self, other: Gaps) -> Self:
+        if not isinstance(other, Gaps):
+            return NotImplemented
+
+        return type(self)(_merge(self.endpoints, other.endpoints, xor))
+
+    def __sub__(self, other: Gaps) -> Self:
+        if not isinstance(other, Gaps):
+            return NotImplemented
+
+        return type(self)(_merge(self.endpoints, other.endpoints, sub))
+
+    def __bool__(self) -> bool:
         return len(self.endpoints) > 0
 
     def __contains__(self, value: T) -> bool:
@@ -242,5 +261,5 @@ class Gaps[T: SupportsLessThan]:
 
         return False
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{{{", ".join(str(endpoint) for endpoint in self.endpoints)}}}"
