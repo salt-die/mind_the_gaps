@@ -31,6 +31,12 @@ def test_bounded_missing_singleton():
     assert a | b == a
 
 
+def test_overlap_singleton():
+    a = Gaps([1, 2])
+    b = Gaps([2, 3])
+    assert a | b == Gaps([1, 3])
+
+
 def test_empty_union():
     a = Gaps([0, 2])
     b = Gaps()

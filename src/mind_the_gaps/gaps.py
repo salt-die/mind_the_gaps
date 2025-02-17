@@ -69,24 +69,50 @@ class Endpoint[T: SupportsLessThan]:
 
     @property
     def is_closed(self) -> bool:
+        """Whether this is a closed endpoint."""
         return self.boundary in "[]"
 
     @property
     def is_open(self) -> bool:
+        """Whether this is an open endpoint."""
         return self.boundary in "()"
 
     @property
     def is_left(self) -> bool:
+        """Whether this is a left endpoint."""
         return self.boundary in "[("
 
     @property
     def is_right(self) -> bool:
+        """Whether this is a right endpoint."""
         return self.boundary in ")]"
 
 
-def _merge(
-    a: list[Endpoint], b: list[Endpoint], op: Callable[[bool, bool], bool]
-) -> list[Endpoint]:
+def _endpoint_contains[T](endpoint: Endpoint[T] | None, value: T) -> bool:
+    """Return whether value could be contained in an interval with given endpoint."""
+    if endpoint is None:
+        return False
+    if endpoint.value == value:
+        return endpoint.is_closed
+    if endpoint.is_left:
+        return value > endpoint.value
+    return value < endpoint.value
+
+
+def _endpoint_contains_right[T](endpoint: Endpoint[T] | None, value: T) -> bool:
+    """Return whether value with a positive offset could be contained in an interval
+    with given endpoint.
+    """
+    if endpoint is None:
+        return False
+    if endpoint.is_left:
+        return value >= endpoint.value
+    return value < endpoint.value
+
+
+def _merge[T](
+    a: list[Endpoint[T]], b: list[Endpoint[T]], op: Callable[[bool, bool], bool]
+) -> list[Endpoint[T]]:
     """Merge two sorted lists of endpoints with a given set operation.
 
     This is a sweep-line algorithm; as each endpoint is encountered one of
@@ -94,54 +120,55 @@ def _merge(
     to `a` or `b`. This may flip `inside_region` (depending on `op`) which adds
     a new endpoint to the output.
     """
-    endpoints: list[Endpoint] = []
+    endpoints: list[Endpoint[T]] = []
     i: int = 0
     j: int = 0
-    inside_a: bool = False
-    inside_b: bool = False
     inside_region: bool = False
+    scanline: T
+    current_a: Endpoint[T] | None = None
+    current_b: Endpoint[T] | None = None
 
     while i < len(a) or j < len(b):
         if i >= len(a):
-            current_min = current_b = b[j]
-            current_a = None
+            current_b = b[j]
+            scanline = current_b.value
+            j += 1
         elif j >= len(b):
-            current_min = current_a = a[i]
-            current_b = None
+            current_a = a[i]
+            scanline = current_a.value
+            i += 1
         else:
             current_a = a[i]
             current_b = b[j]
-            current_min = min(current_a, current_b)
+            scanline = min(current_a.value, current_b.value)
+            i += current_a.value == scanline
+            j += current_b.value == scanline
 
-        if current_a == current_min:
-            inside_a = not inside_a
-            i += 1
+        # Test at scanline
+        inside_a = _endpoint_contains(current_a, scanline)
+        inside_b = _endpoint_contains(current_b, scanline)
+        in_middle = op(inside_a, inside_b)
+        # Test right of scanline
+        inside_a = _endpoint_contains_right(current_a, scanline)
+        inside_b = _endpoint_contains_right(current_b, scanline)
+        in_right = op(inside_a, inside_b)
+        # Note that there is no need to test to the left of the scanline as it is
+        # always equal to `inside_region`.
 
-        if current_b == current_min:
-            inside_b = not inside_b
-            j += 1
-
-        if op(inside_a, inside_b) != inside_region:
-            inside_region = not inside_region
-
-            # Boundary types can swap when differencing depending on
-            # whether the endpoint is inside a region.
-            is_closed = current_min.is_closed
-            b_in_a = inside_a and current_b == current_min
-            a_in_b = inside_b and current_a == current_min
-            if op is sub and b_in_a or op is xor and (a_in_b or b_in_a):
-                is_closed = not is_closed
-
-            boundary = (")(", "][")[is_closed][len(endpoints) % 2 == 0]
-
-            if (
-                len(endpoints) > 0
-                and endpoints[-1].value == current_min.value
-                and endpoints[-1].boundary + boundary not in {"[]", ")("}
-            ):  # Remove redundant endpoints such as `0), [0` or `0], [0`.
-                endpoints.pop()
-            else:
-                endpoints.append(Endpoint(current_min.value, boundary))
+        if inside_region:
+            if not in_right:
+                endpoints.append(Endpoint(scanline, "]" if in_middle else ")"))
+                inside_region = False
+            elif not in_middle:
+                endpoints.append(Endpoint(scanline, ")"))
+                endpoints.append(Endpoint(scanline, "("))
+        else:
+            if in_right:
+                endpoints.append(Endpoint(scanline, "[" if in_middle else "("))
+                inside_region = True
+            elif in_middle:
+                endpoints.append(Endpoint(scanline, "["))
+                endpoints.append(Endpoint(scanline, "]"))
 
     return endpoints
 

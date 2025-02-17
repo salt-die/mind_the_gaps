@@ -24,3 +24,7 @@ def test_endpoint_properties():
 def test_endpoint_lt_not_implemented():
     with pytest.raises(TypeError):
         Endpoint(0, "(") < 0
+
+
+def test_endpoint_eq_not_implemented():
+    assert Endpoint(0, "(") != None

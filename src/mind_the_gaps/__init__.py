@@ -5,4 +5,4 @@ from .var import Var, x
 
 __all__ = ["Endpoint", "Gaps", "Var", "x"]
 
-__version__ = "0.3.4"
+__version__ = "0.4.0"
