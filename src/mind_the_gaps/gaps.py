@@ -144,29 +144,28 @@ def _merge[T](
             i += current_a.value == scanline
             j += current_b.value == scanline
 
-        # Test at scanline
-        inside_a = _endpoint_contains(current_a, scanline)
-        inside_b = _endpoint_contains(current_b, scanline)
-        in_middle = op(inside_a, inside_b)
-        # Test right of scanline
-        inside_a = _endpoint_contains_right(current_a, scanline)
-        inside_b = _endpoint_contains_right(current_b, scanline)
-        in_right = op(inside_a, inside_b)
-        # Note that there is no need to test to the left of the scanline as it is
-        # always equal to `inside_region`.
+        at_scanline = op(
+            _endpoint_contains(current_a, scanline),
+            _endpoint_contains(current_b, scanline),
+        )  # Whether scanline is contained in region.
+
+        right_of_scanline = op(
+            _endpoint_contains_right(current_a, scanline),
+            _endpoint_contains_right(current_b, scanline),
+        )  # Whether scanline with a positive offset is contained in region.
 
         if inside_region:
-            if not in_right:
-                endpoints.append(Endpoint(scanline, "]" if in_middle else ")"))
+            if not right_of_scanline:
+                endpoints.append(Endpoint(scanline, "]" if at_scanline else ")"))
                 inside_region = False
-            elif not in_middle:
+            elif not at_scanline:
                 endpoints.append(Endpoint(scanline, ")"))
                 endpoints.append(Endpoint(scanline, "("))
         else:
-            if in_right:
-                endpoints.append(Endpoint(scanline, "[" if in_middle else "("))
+            if right_of_scanline:
+                endpoints.append(Endpoint(scanline, "[" if at_scanline else "("))
                 inside_region = True
-            elif in_middle:
+            elif at_scanline:
                 endpoints.append(Endpoint(scanline, "["))
                 endpoints.append(Endpoint(scanline, "]"))
 
