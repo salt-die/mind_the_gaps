@@ -113,13 +113,7 @@ def _endpoint_contains_right[T](endpoint: Endpoint[T] | None, value: T) -> bool:
 def _merge[T](
     a: list[Endpoint[T]], b: list[Endpoint[T]], op: Callable[[bool, bool], bool]
 ) -> list[Endpoint[T]]:
-    """Merge two sorted lists of endpoints with a given set operation.
-
-    This is a sweep-line algorithm; as each endpoint is encountered one of
-    `inside_a` or `inside_b` is flipped depending on whether the point belongs
-    to `a` or `b`. This may flip `inside_region` (depending on `op`) which adds
-    a new endpoint to the output.
-    """
+    """Merge two sorted lists of endpoints with a given set operation."""
     endpoints: list[Endpoint[T]] = []
     i: int = 0
     j: int = 0
