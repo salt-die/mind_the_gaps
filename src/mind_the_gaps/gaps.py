@@ -4,6 +4,7 @@ from bisect import bisect
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from functools import total_ordering
+from itertools import pairwise
 from operator import and_, attrgetter, or_, xor
 from typing import Any, Final, Literal, Protocol, Self
 
@@ -166,6 +167,13 @@ def _merge[T](
     return endpoints
 
 
+def _to_number(text: str) -> int | float:
+    try:
+        return int(text)
+    except ValueError:
+        return float(text)
+
+
 @dataclass
 class Gaps[T: SupportsLessThan]:
     """A set of mutually exclusive continuous intervals.
@@ -208,36 +216,36 @@ class Gaps[T: SupportsLessThan]:
                 i += 1
 
     @classmethod
-    def from_string(cls, gaps: str) -> Self:
+    def from_string(cls, gaps: str) -> Self[int | float]:
         """Create gaps from a string.
 
-        Values can only be int or float. Uses standard interval notation, i.e., `"{(-inf, 1], [2, 3)}"`.
+        Values can only be int or float. Uses standard interval notation, i.e.,
+        `"{(-inf, 1], [2, 3)}"`. If the start and end value of an interval are equal,
+        the interval may be expressed as, e.g., `"{[0]}"`.
         """
         if gaps[0] != "{" or gaps[-1] != "}":
             raise ValueError(
                 "Gap string must start and end with curly braces ('{', '}')."
             )
 
-        endpoints = gaps[1:-1].replace(" ", "").split(",")
-        if len(endpoints) == 1:
+        splits = gaps[1:-1].replace(" ", "").split(",")
+        if len(splits) == 1 and splits[0] == "":
             return cls([])
 
-        for i, endpoint in enumerate(endpoints):
-            if endpoint.startswith(("(", "[")):
-                boundary = endpoint[0]
-                value = endpoint[1:]
-            elif endpoint.endswith((")", "]")):
-                boundary = endpoint[-1]
-                value = endpoint[:-1]
+        endpoints: list[Endpoint[int | float]] = []
+        for split in splits:
+            if split.startswith("[") and split.endswith("]"):
+                value = _to_number(split[1:-1])
+                endpoints.append(Endpoint(value, "["))
+                endpoints.append(Endpoint(value, "]"))
+            elif split.startswith(("(", "[")):
+                value = _to_number(split[1:])
+                endpoints.append(Endpoint(value, split[0]))
+            elif split.endswith((")", "]")):
+                value = _to_number(split[:-1])
+                endpoints.append(Endpoint(value, split[-1]))
             else:
-                raise ValueError(f"Invalid endpoint ({endpoint!r}).")
-
-            try:
-                value = int(value)
-            except ValueError:
-                value = float(value)
-
-            endpoints[i] = Endpoint(value, boundary)
+                raise ValueError(f"Invalid endpoint ({split!r}).")
 
         return cls(endpoints)
 
@@ -282,4 +290,12 @@ class Gaps[T: SupportsLessThan]:
         return False
 
     def __str__(self) -> str:
-        return f"{{{", ".join(str(endpoint) for endpoint in self.endpoints)}}}"
+        endpoints = []
+        for a, b in pairwise(self.endpoints):
+            if a == b:
+                endpoints.append(f"[{a.value}]")
+            else:
+                endpoints.append(str(a))
+        if a != b:
+            endpoints.append(str(b))
+        return f"{{{", ".join(endpoints)}}}"

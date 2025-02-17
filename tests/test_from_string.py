@@ -29,6 +29,7 @@ def test_from_string_half_open():
 
 def test_from_string_singleton():
     assert Gaps.from_string("{[0, 0]}") == Gaps([0, 0])
+    assert Gaps.from_string("{[0]}") == Gaps([0, 0])
 
 
 def test_bounded_missing_singleton():
