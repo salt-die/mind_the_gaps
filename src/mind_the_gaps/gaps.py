@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from bisect import bisect
-from collections.abc import Callable
-from dataclasses import dataclass, field
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass
 from functools import total_ordering
 from itertools import pairwise
 from operator import and_, attrgetter, or_, xor
-from typing import Any, Final, Literal, Protocol, Self
+from typing import Any, Final, Literal, Protocol, Self, cast
 
 __all__ = ["Endpoint", "Gaps"]
 
@@ -54,9 +54,9 @@ class Endpoint[T: SupportsLessThan]:
 
         return _BOUNDARY_ORDER[self.boundary] < _BOUNDARY_ORDER[other.boundary]
 
-    def __eq__(self, other: Endpoint) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Endpoint):
-            return NotImplemented
+            return False
 
         return (
             self.value == other.value
@@ -89,7 +89,9 @@ class Endpoint[T: SupportsLessThan]:
         return self.boundary in ")]"
 
 
-def _endpoint_contains[T](endpoint: Endpoint[T] | None, value: T) -> bool:
+def _endpoint_contains[T: SupportsLessThan](
+    endpoint: Endpoint[T] | None, value: T
+) -> bool:
     """Return whether value could be contained in an interval with given endpoint."""
     if endpoint is None:
         return False
@@ -100,18 +102,20 @@ def _endpoint_contains[T](endpoint: Endpoint[T] | None, value: T) -> bool:
     return value < endpoint.value
 
 
-def _endpoint_contains_right[T](endpoint: Endpoint[T] | None, value: T) -> bool:
+def _endpoint_contains_right[T: SupportsLessThan](
+    endpoint: Endpoint[T] | None, value: T
+) -> bool:
     """Return whether value with a positive offset could be contained in an interval
     with given endpoint.
     """
     if endpoint is None:
         return False
     if endpoint.is_left:
-        return value >= endpoint.value
+        return not (value < endpoint.value)
     return value < endpoint.value
 
 
-def _merge[T](
+def _merge[T: SupportsLessThan](
     a: list[Endpoint[T]], b: list[Endpoint[T]], op: Callable[[bool, bool], bool]
 ) -> list[Endpoint[T]]:
     """Merge two sorted lists of endpoints with a given set operation."""
@@ -167,7 +171,7 @@ def _merge[T](
     return endpoints
 
 
-def _to_number(text: str) -> int | float:
+def _to_number(text: str) -> float:
     try:
         return int(text)
     except ValueError:
@@ -188,35 +192,43 @@ class Gaps[T: SupportsLessThan]:
     is true.
     """
 
-    endpoints: list[T | Endpoint[T]] = field(default_factory=list)
+    endpoints: list[Endpoint[T]]
 
-    def __post_init__(self) -> None:
-        if len(self.endpoints) % 2 == 1:
+    def __init__(self, endpoints: Sequence[T | Endpoint[T]] | None = None) -> None:
+        if endpoints is None:
+            endpoints = []
+
+        if len(endpoints) % 2 == 1:
             raise ValueError("Need an even number of endpoints.")
 
-        for i, endpoint in enumerate(self.endpoints):
+        endpoints_strict: list[Endpoint[T]] = []
+        for i, endpoint in enumerate(endpoints):
             if not isinstance(endpoint, Endpoint):
-                self.endpoints[i] = Endpoint(endpoint, "[" if i % 2 == 0 else "]")
+                endpoints_strict.append(Endpoint(endpoint, "[" if i % 2 == 0 else "]"))
             elif i % 2 == 0 and endpoint.is_right:
                 raise ValueError(f"Expected left boundary, got {endpoint!r}.")
             elif i % 2 == 1 and endpoint.is_left:
                 raise ValueError(f"Expected right boundary, got {endpoint!r}.")
+            else:
+                endpoints_strict.append(endpoint)
 
         i = 0
-        while i < len(self.endpoints) - 1:
-            a = self.endpoints[i]
-            b = self.endpoints[i + 1]
+        while i < len(endpoints_strict) - 1:
+            a = endpoints_strict[i]
+            b = endpoints_strict[i + 1]
             if a > b:
                 raise ValueError(f"Endpoints unsorted. {a!r} > {b!r}")
             if a.value == b.value and a.boundary + b.boundary not in {"[]", ")("}:
                 # Intervals aren't minimally expressed, but can be fixed by removing
                 # these endpoints.
-                del self.endpoints[i : i + 2]
+                del endpoints_strict[i : i + 2]
             else:
                 i += 1
 
+        self.endpoints = endpoints_strict
+
     @classmethod
-    def from_string(cls, gaps: str) -> Self[int | float]:
+    def from_string(cls: type[Gaps[float]], gaps: str) -> Gaps[float]:
         """Create gaps from a string.
 
         Values can only be int or float. Uses standard interval notation, i.e.,
@@ -232,7 +244,7 @@ class Gaps[T: SupportsLessThan]:
         if len(splits) == 1 and splits[0] == "":
             return cls([])
 
-        endpoints: list[Endpoint[int | float]] = []
+        endpoints: list[Endpoint[float]] = []
         for split in splits:
             if split.startswith("[") and split.endswith("]"):
                 value = _to_number(split[1:-1])
@@ -240,10 +252,10 @@ class Gaps[T: SupportsLessThan]:
                 endpoints.append(Endpoint(value, "]"))
             elif split.startswith(("(", "[")):
                 value = _to_number(split[1:])
-                endpoints.append(Endpoint(value, split[0]))
+                endpoints.append(Endpoint(value, cast(Boundary, split[0])))
             elif split.endswith((")", "]")):
                 value = _to_number(split[:-1])
-                endpoints.append(Endpoint(value, split[-1]))
+                endpoints.append(Endpoint(value, cast(Boundary, split[-1])))
             else:
                 raise ValueError(f"Invalid endpoint ({split!r}).")
 
@@ -291,11 +303,13 @@ class Gaps[T: SupportsLessThan]:
 
     def __str__(self) -> str:
         endpoints = []
+        a: Endpoint | None = None
+        b: Endpoint | None = None
         for a, b in pairwise(self.endpoints):
             if a == b:
                 endpoints.append(f"[{a.value}]")
             else:
                 endpoints.append(str(a))
-        if a != b:
+        if a is not None and b is not None and a != b:
             endpoints.append(str(b))
         return f"{{{", ".join(endpoints)}}}"
