@@ -229,7 +229,7 @@ class Gaps[T: SupportsLessThan]:
     def from_string(cls: type[Gaps[float]], gaps: str) -> Gaps[float]:
         """Create gaps from a string.
 
-        Values can only be int or float. Uses standard interval notation, i.e.,
+        Values can only be int or float. Uses standard interval notation:
         `"{(-inf, 1], [2, 3)}"`. If the start and end value of an interval are equal,
         the interval may be expressed as, e.g., `"{[0]}"`.
         """
