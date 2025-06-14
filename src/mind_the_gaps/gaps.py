@@ -183,9 +183,8 @@ class Gaps[T: SupportsLessThan]:
     """A set of mutually exclusive continuous intervals.
 
     `Gaps` are created with an ordered sequence of endpoints or values with alternating
-    endpoints representing the left or right endpoint of an interval. Endpoints that
-    are just values and not of type `Endpoint` will be converted to an `Endpoint` with
-    a closed boundary so that ::
+    values representing the left then right endpoint of an interval. Values will be
+    converted to an `Endpoint` with a closed boundary so that ::
 
         Gaps([1, 2]) == Gaps([Endpoint(1, "["), Endpoint(2, "]")])
 
