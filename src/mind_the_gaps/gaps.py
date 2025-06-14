@@ -4,7 +4,6 @@ from bisect import bisect
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from functools import total_ordering
-from itertools import pairwise
 from operator import and_, attrgetter, or_, xor
 from typing import Any, Final, Literal, Protocol, Self, cast
 
@@ -301,14 +300,12 @@ class Gaps[T: SupportsLessThan]:
         return False
 
     def __str__(self) -> str:
-        endpoints = []
-        a: Endpoint | None = None
-        b: Endpoint | None = None
-        for a, b in pairwise(self.endpoints):
+        endpoints: list[str] = []
+        it = iter(self.endpoints)
+        for a, b in zip(it, it):
             if a == b:
                 endpoints.append(f"[{a.value}]")
             else:
                 endpoints.append(str(a))
-        if a is not None and b is not None and a != b:
-            endpoints.append(str(b))
+                endpoints.append(str(b))
         return f"{{{", ".join(endpoints)}}}"
